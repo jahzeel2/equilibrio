@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sistema de Gestión de Gimnasio (Local)</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+  <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+  <style id="app-style">
+    :root {
+      --primary: #4361ee;
+      --secondary: #3f37c9;
+      --success: #4cc9f0;
+      --danger: #f72585;
+      --warning: #f8961e;
+      --info: #90e0ef;
+      --sidebar-width: 280px;
+    }
+    
+    body {
+      font-family: 'Roboto', sans-serif;
+      background-color: #f8f9fa;
+      overflow-x: hidden;
+    }
+    
+    .sidebar {
+      position: fixed;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: var(--sidebar-width);
+      background-color: var(--primary);
+      transition: all 0.3s;
+      z-index: 1000;
+      padding-top: 20px;
+      box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar-header {
+        padding: 15px 20px;
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: white;
+        text-align: center;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .sidebar .nav-link {
+      color: rgba(255, 255, 255, 0.85);
+      border-radius: 0;
+      margin-bottom: 5px;
+      padding: 15px 20px;
+      transition: all 0.3s;
+    }
+    
+    .sidebar .nav-link:hover, 
+    .sidebar .nav-link.active {
+      background-color: rgba(255, 255, 255, 0.1);
+      color: white;
+      padding-left: 25px;
+    }
+    
+    .sidebar .nav-link i {
+      margin-right: 10px;
+      width: 20px;
+      text-align: center;
+    }
+    
+    .main-content {
+      margin-left: var(--sidebar-width);
+      padding: 20px;
+      padding-top: 80px; /* Space for fixed navbar */
+      transition: all 0.3s;
+    }
+    
+    .navbar {
+      position: fixed;
+      top: 0;
+      left: var(--sidebar-width);
+      right: 0;
+      z-index: 999;
+      height: 60px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      background-color: white;
+      transition: all 0.3s;
+    }
+    
+    .card {
+      border-radius: 10px;
+      border: none;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+      margin-bottom: 20px;
+      transition: all 0.3s;
+    }
+    
+    .card:hover {
+      box-shadow: 0 5px 30px rgba(0, 0, 0, 0.1);
+    }
+    
+    .card-header {
+      background-color: white;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+      font-weight: 600;
+      padding: 15px 20px;
+    }
+    
+    .btn-primary {
+      background-color: var(--primary);
+      border-color: var(--primary);
+    }
+    
+    .btn-primary:hover {
+      background-color: var(--secondary);
+      border-color: var(--secondary);
+    }
+        
+    .toggle-sidebar-btn {
+      position: fixed;
+      top: 15px;
+      left: 20px;
+      z-index: 1001;
+      cursor: pointer;
+      color: white;
+      display: none;
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+    }
+    
+    .user-profile {
+      display: flex;
+      align-items: center;
+      padding: 15px 20px;
+      margin-bottom: 20px;
+      color: white;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .user-profile img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      margin-right: 10px;
+      object-fit: cover;
+    }
+    
+    .user-profile .user-info {
+      line-height: 1.2;
+    }
+    
+    .user-profile .user-name {
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+    
+    .user-profile .user-role {
+      font-size: 0.8rem;
+      opacity: 0.8;
+    }
+    
+    .content-header {
+      margin-bottom: 25px;
+    }
+    
+    .content-title {
+      margin-bottom: 5px;
+      font-weight: 600;
+    }
+    
+    .content-subtitle {
+      color: #6c757d;
+      font-size: 0.9rem;
+    }
+    
+    .section {
+      display: none;
+      animation: fadeIn 0.5s;
+    }
+    
+    .section.active {
+      display: block;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+        
+    .qr-container {
+      text-align: center;
+      padding: 20px;
+    }
+    
+    #generated-qr-image-container {
+      max-width: 250px;
+      margin: 20px auto;
+      border: 1px solid #ddd;
+      padding: 10px;
+      background-color: white;
+      min-height: 200px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #generated-qr-image-container img {
+        max-width: 100%;
+        max-height: 100%;
+    }
+    
+    #qr-reader {
+      width: 100%;
+      max-width: 400px;
+      min-height: 300px;
+      margin: 0 auto;
+      border: 1px solid #ddd;
+      background-color: #f0f0f0;
+    }
+        
+    #editor-container {
+      height: 300px;
+    }
+
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.5);
+        z-index: 2000;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    .loading-overlay .spinner-border {
+        width: 3rem;
+        height: 3rem;
+    }
+    
+    @media (max-width: 992px) {
+      .sidebar {
+        transform: translateX(-100%);
+      }
+      
+      .main-content, .navbar {
+        margin-left: 0;
+        left: 0;
+      }
+      
+      .sidebar.show {
+        transform: translateX(0);
+      }
+      
+      .toggle-sidebar-btn {
+        display: block;
+        color: var(--primary);
+      }
+      .sidebar.show + .toggle-sidebar-btn {
+          color: white;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="loading-overlay" id="loading-overlay" style="display: none;">
+    <div class="spinner-border text-light" role="status">
+      <span class="visually-hidden">Cargando...</span>
+    </div>
+  </div>
+
+  <button class="toggle-sidebar-btn">
+    <i class="fas fa-bars"></i>
+  </button>
+  
+  <div class="sidebar">
+    <div class="sidebar-header">
+        GymSys
+    </div>
+    <div class="user-profile">
+      <img src="https://placehold.co/40x40/EBF4FF/76808A?text=A" alt="Usuario" id="sidebar-user-img">
+      <div class="user-info">
+        <div class="user-name" id="sidebar-user-name">Admin</div>
+        <div class="user-role" id="sidebar-user-role">Administrador</div>
+      </div>
+    </div>
+    <ul class="nav flex-column flex-grow-1">
+      <li class="nav-item"><a class="nav-link active" href="javascript:void(0)" data-section="profile"><i class="fas fa-user"></i> Mi Perfil</a></li>
+      <li class="nav-item"><a class="nav-link" href="javascript:void(0)" data-section="students"><i class="fas fa-users"></i> Alumnos</a></li>
+      <li class="nav-item"><a class="nav-link" href="javascript:void(0)" data-section="memberships"><i class="fas fa-id-card"></i> Membresías</a></li>
+      <li class="nav-item"><a class="nav-link" href="javascript:void(0)" data-section="qr"><i class="fas fa-qrcode"></i> Generar QR</a></li>
+      <li class="nav-item"><a class="nav-link" href="javascript:void(0)" data-section="attendance"><i class="fas fa-clipboard-check"></i> Asistencia</a></li>
+      <li class="nav-item"><a class="nav-link" href="javascript:void(0)" data-section="routines"><i class="fas fa-dumbbell"></i> Rutinas</a></li>
+      <li class="nav-item"><a class="nav-link" href="javascript:void(0)" data-section="payments"><i class="fas fa-credit-card"></i> Pagos</a></li>
+    </ul>
+    <div class="mt-auto p-3">
+        <button class="btn btn-info w-100" id="logout-btn">
+            <i class="fas fa-sync-alt"></i> Recargar Datos
+        </button>
+    </div>
+  </div>
+  
+  <nav class="navbar">
+    <div class="container-fluid">
+      <span class="navbar-brand mb-0 h1" id="navbar-title">Mi Perfil</span>
+    </div>
+  </nav>
+  
+  <div class="main-content">
+    
+    <!-- Profile Section -->
+    <div id="profile-section" class="section active">
+      <div class="content-header">
+        <h2 class="content-title">Bienvenido</h2>
+        <p class="content-subtitle">Sistema de gestión de gimnasio conectado a un backend local (FastAPI y SQL Server).</p>
+      </div>
+      <div class="alert alert-success">
+        <h4 class="alert-heading">¡Conectado!</h4>
+        <p>Si ves esta pantalla, el frontend está cargado. Asegúrate de que tu servidor backend FastAPI esté corriendo en `http://127.0.0.1:8000` para que la aplicación funcione.</p>
+        <hr>
+        <p class="mb-0">Puedes usar el botón "Recargar Datos" en la barra lateral para volver a cargar toda la información desde el servidor.</p>
+      </div>
+    </div>
+
+    <!-- Students Section -->
+    <div id="students-section" class="section">
+        <div class="content-header">
+            <h2 class="content-title">Alumnos</h2>
+            <p class="content-subtitle">Gestiona la información de los alumnos.</p>
+        </div>
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span id="student-form-title">Registrar Nuevo Alumno</span>
+                <button class="btn btn-sm btn-primary" id="add-student-form-toggle-btn"><i class="fas fa-plus"></i> Agregar</button>
+            </div>
+            <div class="card-body" id="add-student-form-container" style="display: none;">
+                <form id="add-student-form">
+                    <input type="hidden" id="edit-student-id">
+                    <div class="row mb-3"><div class="col-md-6"><label for="student-nombre" class="form-label">Nombre</label><input type="text" class="form-control" id="student-nombre" required></div><div class="col-md-6"><label for="student-apellido" class="form-label">Apellido</label><input type="text" class="form-control" id="student-apellido" required></div></div>
+                    <div class="row mb-3"><div class="col-md-6"><label for="student-email" class="form-label">Email</label><input type="email" class="form-control" id="student-email"></div><div class="col-md-6"><label for="student-telefono" class="form-label">Teléfono</label><input type="text" class="form-control" id="student-telefono"></div></div>
+                    <div class="row mb-3"><div class="col-md-6"><label for="student-fecha-nacimiento" class="form-label">Fecha de Nacimiento</label><input type="date" class="form-control" id="student-fecha-nacimiento"></div><div class="col-md-6"><label for="student-direccion" class="form-label">Dirección</label><input type="text" class="form-control" id="student-direccion"></div></div>
+                    <div class="text-end"><button type="button" class="btn btn-secondary me-2" id="cancel-student-btn">Cancelar</button><button type="submit" class="btn btn-primary">Guardar Alumno</button></div>
+                </form>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center"><span>Lista de Alumnos</span><div class="input-group" style="max-width: 300px;"><input type="text" class="form-control" placeholder="Buscar alumno..." id="search-student"></div></div>
+            <div class="card-body"><div class="table-responsive"><table class="table table-hover"><thead><tr><th>Nombre</th><th>Email</th><th>Teléfono</th><th>Acciones</th></tr></thead><tbody id="students-table-body"></tbody></table></div></div>
+        </div>
+    </div>
+    
+    <!-- Memberships Section -->
+    <div id="memberships-section" class="section">
+      <div class="content-header"><h2 class="content-title">Membresías</h2><p class="content-subtitle">Gestiona las membresías de los alumnos</p></div>
+      <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center"><span id="membership-form-title">Nueva Membresía</span><button class="btn btn-sm btn-primary" id="add-membership-form-toggle-btn"><i class="fas fa-plus"></i> Agregar</button></div>
+        <div class="card-body" id="add-membership-form-container" style="display: none;">
+          <form id="add-membership-form">
+            <input type="hidden" id="edit-membership-id">
+            <div class="row mb-3"><div class="col-md-6"><label for="membership-student-select" class="form-label">Alumno</label><select class="form-select" id="membership-student-select" required><option selected disabled value="">Seleccionar alumno...</option></select></div><div class="col-md-6"><label for="membership-type" class="form-label">Tipo de Membresía</label><select class="form-select" id="membership-type" required><option selected disabled value="">Seleccionar tipo...</option><option value="mensual">Mensual</option><option value="trimestral">Trimestral</option><option value="semestral">Semestral</option><option value="anual">Anual</option><option value="clase_unica">Clase Única</option></select></div></div>
+            <div class="row mb-3"><div class="col-md-6"><label for="membership-start-date" class="form-label">Fecha de Inicio</label><input type="date" class="form-control" id="membership-start-date" required></div><div class="col-md-6"><label for="membership-end-date" class="form-label">Fecha de Vencimiento</label><input type="date" class="form-control" id="membership-end-date" required></div></div>
+            <div class="row mb-3"><div class="col-md-6"><label for="membership-amount" class="form-label">Monto</label><div class="input-group"><span class="input-group-text">$</span><input type="number" class="form-control" id="membership-amount" step="0.01" required></div></div><div class="col-md-6"><label for="membership-payment-status" class="form-label">Estado de Pago</label><select class="form-select" id="membership-payment-status" required><option value="pagado">Pagado</option><option value="pendiente">Pendiente</option></select></div></div>
+            <div class="text-end"><button type="button" class="btn btn-secondary me-2" id="cancel-membership-btn">Cancelar</button><button type="submit" class="btn btn-primary">Guardar Membresía</button></div>
+          </form>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center"><span>Membresías Registradas</span><div class="input-group" style="max-width: 300px;"><input type="text" class="form-control" placeholder="Buscar membresía..." id="search-membership"></div></div>
+        <div class="card-body"><div class="table-responsive"><table class="table table-hover"><thead><tr><th>Alumno</th><th>Tipo</th><th>Inicio</th><th>Vencimiento</th><th>Monto</th><th>Estado Memb.</th><th>Acciones</th></tr></thead><tbody id="memberships-table-body"></tbody></table></div></div>
+      </div>
+    </div>
+    
+    <!-- QR Generation Section -->
+    <div id="qr-section" class="section">
+      <div class="content-header"><h2 class="content-title">Generar QR de Acceso</h2><p class="content-subtitle">Genera códigos QR para el acceso de los alumnos.</p></div>
+      <div class="card">
+        <div class="card-header">Generación de Código QR</div>
+        <div class="card-body">
+          <div class="row mb-4"><div class="col-md-6"><label for="qr-student-select" class="form-label">Seleccionar Alumno</label><select class="form-select" id="qr-student-select"><option selected disabled value="">Seleccionar alumno...</option></select></div><div class="col-md-6 d-flex align-items-end"><button class="btn btn-primary w-100" id="generate-qr-btn"><i class="fas fa-qrcode me-2"></i> Generar QR</button></div></div>
+          <div class="qr-container" id="qr-result-container" style="display: none;"><div class="alert alert-info mb-4"><i class="fas fa-info-circle me-2"></i>Este código QR es único para el alumno. Sirve para marcar su asistencia.</div><div id="generated-qr-image-container"><p class="text-muted">El código QR aparecerá aquí.</p></div><div class="mt-3"><button class="btn btn-success" id="download-qr-btn" style="display:none;"><i class="fas fa-download me-2"></i> Descargar QR</button></div></div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Attendance Section -->
+    <div id="attendance-section" class="section">
+      <div class="content-header"><h2 class="content-title">Control de Asistencia</h2><p class="content-subtitle">Registra la asistencia de los alumnos mediante códigos QR.</p></div>
+      <div class="row">
+        <div class="col-md-6">
+          <div class="card">
+            <div class="card-header">Escanear Código QR</div>
+            <div class="card-body">
+              <div id="manual-input-container">
+                <div class="mb-3"><label for="qr-code-manual" class="form-label">ID del Alumno (del QR)</label><input type="text" class="form-control" id="qr-code-manual" placeholder="Ingresa el ID del alumno del QR"></div>
+                <button class="btn btn-primary w-100" id="submit-manual-code-btn"><i class="fas fa-check me-2"></i> Verificar Asistencia</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="card">
+            <div class="card-header">Registro de Asistencia del Día (<span id="current-date-attendance"></span>)</div>
+            <div class="card-body"><div class="table-responsive" style="max-height: 300px; overflow-y: auto;"><table class="table table-sm table-hover"><thead><tr><th>Alumno</th><th>Hora Ingreso</th><th>Estado</th></tr></thead><tbody id="attendance-log-table-body"></tbody></table></div></div>
+          </div>
+          <div class="card mt-4">
+            <div class="card-header">Último Registro / Verificación</div>
+            <div class="card-body" id="last-attendance-info-container"><div class="text-center p-3 text-muted"><i class="fas fa-user-clock fa-2x mb-2"></i><p>Esperando ingreso manual...</p></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Routines Section -->
+    <div id="routines-section" class="section">
+      <div class="content-header"><h2 class="content-title">Rutinas de Entrenamiento</h2><p class="content-subtitle">Crea y asigna rutinas personalizadas.</p></div>
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center"><span id="routine-form-title">Asignar/Crear Rutina</span><button class="btn btn-sm btn-info" id="routine-form-toggle-btn"><i class="fas fa-plus"></i> Nueva Rutina</button></div>
+        <div class="card-body" id="routine-form-container" style="display:none;">
+          <form id="routine-form">
+            <input type="hidden" id="edit-routine-id">
+            <div class="row mb-3"><div class="col-md-6"><label for="routine-student-select" class="form-label">Seleccionar Alumno</label><select class="form-select" id="routine-student-select" required><option selected disabled value="">Seleccionar alumno...</option></select></div><div class="col-md-6"><label for="routine-name" class="form-label">Nombre de la Rutina</label><input type="text" class="form-control" id="routine-name" placeholder="Ej: Rutina de Fuerza Dia 1" required></div></div>
+            <div class="row mb-3"><div class="col-md-12"><label for="routine-template-select" class="form-label">Cargar desde Plantilla (Opcional)</label><select class="form-select" id="routine-template-select"><option selected disabled value="">No usar plantilla</option><option value="principiante">Principiante</option><option value="intermedio">Intermedio</option><option value="avanzado">Avanzado</option></select></div></div>
+            <div class="mb-3"><label class="form-label">Descripción de la Rutina</label><div id="editor-container"></div></div>
+            <div class="d-flex justify-content-between"><button type="button" class="btn btn-secondary" id="clear-routine-btn"><i class="fas fa-eraser me-2"></i> Limpiar</button><div><button type="button" class="btn btn-light me-2" id="cancel-routine-edit-btn" style="display:none;"><i class="fas fa-times me-2"></i> Cancelar</button><button type="submit" class="btn btn-primary" id="save-routine-btn"><i class="fas fa-save me-2"></i> Guardar</button></div></div>
+          </form>
+        </div>
+      </div>
+      <div class="card mt-4">
+        <div class="card-header d-flex justify-content-between align-items-center"><span>Rutinas Asignadas</span><div class="input-group" style="max-width: 300px;"><input type="text" class="form-control" placeholder="Buscar rutina..." id="search-assigned-routine"></div></div>
+        <div class="card-body"><div class="table-responsive"><table class="table table-hover"><thead><tr><th>Alumno</th><th>Nombre Rutina</th><th>Última Actualización</th><th>Acciones</th></tr></thead><tbody id="assigned-routines-table-body"></tbody></table></div></div>
+      </div>
+    </div>
+    
+    <!-- Payments Section -->
+    <div id="payments-section" class="section">
+      <div class="content-header"><h2 class="content-title">Pagos</h2><p class="content-subtitle">Visualiza membresías con pagos pendientes o próximos a vencer.</p></div>
+      <div class="card">
+        <div class="card-header">Estado de Pagos de Membresías</div>
+        <div class="card-body"><div class="table-responsive"><table class="table table-hover"><thead><tr><th>Alumno</th><th>Tipo Memb.</th><th>Vencimiento</th><th>Monto</th><th>Estado Pago</th><th>Acciones</th></tr></thead><tbody id="upcoming-payments-table-body"></tbody></table></div></div>
+      </div>
+    </div>
+
+  </div> <!-- End Main Content -->
+
+  <!-- Generic Modal for Notifications/Confirmations -->
+  <div class="modal fade" id="appModal" tabindex="-1" aria-labelledby="appModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="appModalLabel">Notificación</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div><div class="modal-body" id="appModalBody">...</div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="appModalCloseButton">Cerrar</button><button type="button" class="btn btn-primary" id="appModalConfirmButton" style="display:none;">Confirmar</button></div></div>
+    </div>
+  </div>
+
+  <!-- External Libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  
+  <!-- App Logic -->
+  <script type="module">
+    // --- API & App Configuration ---
+    const API_BASE_URL = 'http://127.0.0.1:8000';
+    const ADMIN_USER_ID = "local-admin-01"; // Hardcoded admin ID for local development
+
+    // --- Global State ---
+    let quill = null;
+    let appModalInstance = null;
+    let localData = {
+        students: [],
+        memberships: [],
+        routines: []
+    };
+
+    // --- UTILITY FUNCTIONS ---
+    const showLoading = (show = true) => { document.getElementById('loading-overlay').style.display = show ? 'flex' : 'none'; };
+    
+    async function showAppModal(title, message, type = 'info', onConfirm = null) {
+        if (!appModalInstance) appModalInstance = new bootstrap.Modal(document.getElementById('appModal'));
+        
+        document.getElementById('appModalLabel').textContent = title;
+        document.getElementById('appModalBody').innerHTML = message;
+        
+        const confirmButton = document.getElementById('appModalConfirmButton');
+        confirmButton.style.display = onConfirm ? 'block' : 'none';
+        
+        if (onConfirm) {
+            confirmButton.onclick = () => { onConfirm(); appModalInstance.hide(); };
+        }
+    
+        appModalInstance.show();
+    }
+
+    const formatDate = (dateString) => {
+        if (!dateString) return 'N/A';
+        const date = new Date(dateString);
+        return date.toLocaleDateString('es-ES', { year: 'numeric', month: '2-digit', day: '2-digit', timeZone: 'UTC' });
+    };
+
+    const formatTime = (dateString) => {
+        if (!dateString) return 'N/A';
+        const date = new Date(dateString);
+        return date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    };
+    
+    // --- API-RELATED FUNCTIONS ---
+    async function apiRequest(endpoint, options = {}) {
+        showLoading(true);
+        try {
+            const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.detail || 'Ocurrió un error en la solicitud a la API.');
+            }
+            return data;
+        } catch (error) {
+            console.error('API Request Error:', error);
+            showAppModal('Error de API', error.message, 'error');
+            return null; // Devuelve null en caso de error para que la función que llama pueda manejarlo
+        } finally {
+            showLoading(false);
+        }
+    }
+    
+    async function fetchAllData() {
+        const students = await apiRequest('/students/');
+        if (students) localData.students = students;
+
+        const memberships = await apiRequest('/memberships/');
+        if (memberships) localData.memberships = memberships;
+
+        // Rutinas se cargan por alumno, pero podemos obtener todas si creamos el endpoint
+        // Por ahora, las dejamos vacías y se cargan al seleccionar un alumno
+        localData.routines = []; 
+
+        // Una vez cargados los datos, renderizamos todo
+        renderStudentsTable();
+        renderMembershipsTable();
+        populateAllStudentSelects();
+        renderPaymentsTable();
+        renderAssignedRoutinesTable(); // Inicialmente vacía
+    }
+
+    // --- STUDENT LOGIC ---
+    function renderStudentsTable() {
+        const tableBody = document.getElementById('students-table-body');
+        const searchTerm = document.getElementById('search-student').value.toLowerCase();
+        tableBody.innerHTML = '';
+        const filtered = localData.students.filter(s => `${s.Nombre} ${s.Apellido}`.toLowerCase().includes(searchTerm));
+        
+        if (filtered.length === 0) {
+            tableBody.innerHTML = `<tr><td colspan="4" class="text-center">No se encontraron alumnos.</td></tr>`;
+            return;
+        }
+
+        filtered.forEach(student => {
+            tableBody.innerHTML += `
+                <tr>
+                    <td>${student.Nombre} ${student.Apellido}</td>
+                    <td>${student.Email || 'N/A'}</td>
+                    <td>${student.Telefono || 'N/A'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary edit-student-btn" data-id="${student.StudentID}"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-sm btn-outline-danger delete-student-btn" data-id="${student.StudentID}"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>`;
+        });
+        addStudentActionListeners();
+    }
+
+    function addStudentActionListeners() {
+        document.querySelectorAll('.edit-student-btn').forEach(btn => btn.onclick = handleEditStudent);
+        document.querySelectorAll('.delete-student-btn').forEach(btn => btn.onclick = handleDeleteStudent);
+    }
+    
+    function handleEditStudent(e) {
+        const studentId = e.currentTarget.dataset.id;
+        const student = localData.students.find(s => s.StudentID === studentId);
+        if (student) {
+            document.getElementById('edit-student-id').value = student.StudentID;
+            document.getElementById('student-nombre').value = student.Nombre;
+            document.getElementById('student-apellido').value = student.Apellido;
+            document.getElementById('student-email').value = student.Email || '';
+            document.getElementById('student-telefono').value = student.Telefono || '';
+            document.getElementById('student-fecha-nacimiento').value = student.FechaNacimiento ? student.FechaNacimiento.split('T')[0] : '';
+            document.getElementById('student-direccion').value = student.Direccion || '';
+            document.getElementById('student-form-title').textContent = 'Editar Alumno';
+            document.getElementById('add-student-form-container').style.display = 'block';
+        }
+    }
+    
+    async function handleDeleteStudent(e) {
+        const studentId = e.currentTarget.dataset.id;
+        const student = localData.students.find(s => s.StudentID === studentId);
+        showAppModal('Confirmar Eliminación', `¿Seguro que deseas eliminar a ${student.Nombre} ${student.Apellido}?`, 'warning', async () => {
+            const result = await apiRequest(`/students/${studentId}`, { method: 'DELETE' });
+            if (result) {
+                showAppModal('Éxito', 'Alumno eliminado correctamente.', 'success');
+                await fetchAllData(); // Recargar todo para mantener la consistencia
+            }
+        });
+    }
+
+    // --- MEMBERSHIP LOGIC ---
+    function renderMembershipsTable() {
+        const tableBody = document.getElementById('memberships-table-body');
+        const searchTerm = document.getElementById('search-membership').value.toLowerCase();
+        tableBody.innerHTML = '';
+        
+        const filtered = localData.memberships.filter(m => m.StudentName?.toLowerCase().includes(searchTerm));
+        if (filtered.length === 0) {
+            tableBody.innerHTML = `<tr><td colspan="6" class="text-center">No se encontraron membresías.</td></tr>`;
+            return;
+        }
+
+        filtered.forEach(mem => {
+            const endDate = new Date(mem.EndDate);
+            const statusClass = endDate < new Date() ? 'bg-danger' : (mem.PaymentStatus === 'pendiente' ? 'bg-warning text-dark' : 'bg-success');
+            const statusText = endDate < new Date() ? 'Vencida' : (mem.PaymentStatus === 'pendiente' ? 'Pendiente' : 'Activa');
+            
+            tableBody.innerHTML += `
+                <tr>
+                    <td>${mem.StudentName || 'N/A'}</td>
+                    <td>${mem.Type}</td>
+                    <td>${formatDate(mem.StartDate)}</td>
+                    <td>${formatDate(mem.EndDate)}</td>
+                    <td>$${mem.Amount}</td>
+                    <td><span class="badge ${statusClass}">${statusText}</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary edit-membership-btn" data-id="${mem.MembershipID}"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-sm btn-outline-danger delete-membership-btn" data-id="${mem.MembershipID}"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>`;
+        });
+        addMembershipActionListeners();
+    }
+    
+    // --- ROUTINE LOGIC ---
+    function renderAssignedRoutinesTable() {
+         const tableBody = document.getElementById('assigned-routines-table-body');
+         const searchTerm = document.getElementById('search-assigned-routine').value.toLowerCase();
+         tableBody.innerHTML = '';
+         
+         const filtered = localData.routines.filter(r => r.StudentName?.toLowerCase().includes(searchTerm) || r.RoutineName?.toLowerCase().includes(searchTerm));
+         if (filtered.length === 0) {
+             tableBody.innerHTML = `<tr><td colspan="4" class="text-center">No hay rutinas para mostrar. Selecciona un alumno para ver sus rutinas.</td></tr>`;
+             return;
+         }
+
+         filtered.forEach(routine => {
+            tableBody.innerHTML += `
+                <tr>
+                    <td>${routine.StudentName}</td>
+                    <td>${routine.RoutineName}</td>
+                    <td>${formatDate(routine.LastUpdateDate)}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-info view-routine-btn" data-id="${routine.RoutineID}"><i class="fas fa-eye"></i></button>
+                        <button class="btn btn-sm btn-outline-primary edit-routine-btn" data-id="${routine.RoutineID}"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-sm btn-outline-danger delete-routine-btn" data-id="${routine.RoutineID}"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>`;
+         });
+         addRoutineActionListeners();
+    }
+    
+    function addRoutineActionListeners() {
+        document.querySelectorAll('.view-routine-btn').forEach(btn => btn.onclick = handleViewRoutine);
+        document.querySelectorAll('.edit-routine-btn').forEach(btn => btn.onclick = handleEditRoutine);
+        document.querySelectorAll('.delete-routine-btn').forEach(btn => btn.onclick = handleDeleteRoutine);
+    }
+    
+    function handleViewRoutine(e) {
+        const routineId = e.currentTarget.dataset.id;
+        const routine = localData.routines.find(r => r.RoutineID === routineId);
+        if (routine) {
+            showAppModal(`Rutina: ${routine.RoutineName}`, routine.ContentHTML, 'info');
+        }
+    }
+    
+    function handleEditRoutine(e) {
+        const routineId = e.currentTarget.dataset.id;
+        const routine = localData.routines.find(r => r.RoutineID === routineId);
+        if(routine) {
+            document.getElementById('edit-routine-id').value = routine.RoutineID;
+            document.getElementById('routine-student-select').value = routine.StudentID;
+            document.getElementById('routine-name').value = routine.RoutineName;
+            quill.root.innerHTML = routine.ContentHTML;
+            document.getElementById('routine-form-title').textContent = "Editar Rutina";
+            document.getElementById('routine-form-container').style.display = 'block';
+            document.getElementById('cancel-routine-edit-btn').style.display = 'inline-block';
+        }
+    }
+    
+    async function handleDeleteRoutine(e) {
+        const routineId = e.currentTarget.dataset.id;
+        const routine = localData.routines.find(r => r.RoutineID === routineId);
+        showAppModal('Confirmar Eliminación', `¿Seguro que deseas eliminar la rutina "${routine.RoutineName}"?`, 'warning', async () => {
+            const result = await apiRequest(`/routines/${routineId}`, { method: 'DELETE' });
+            if (result) {
+                showAppModal('Éxito', 'Rutina eliminada.', 'success');
+                // Recargar las rutinas del alumno afectado
+                const studentId = document.getElementById('routine-student-select').value;
+                if (studentId) await fetchRoutinesForStudent(studentId);
+            }
+        });
+    }
+
+    // --- ATTENDANCE LOGIC ---
+    async function fetchTodayAttendance() {
+        const attendanceRecords = await apiRequest('/attendance/today');
+        const tableBody = document.getElementById('attendance-log-table-body');
+        tableBody.innerHTML = '';
+
+        if (attendanceRecords && attendanceRecords.length > 0) {
+            attendanceRecords.forEach(rec => {
+                tableBody.innerHTML += `<tr><td>${rec.StudentName}</td><td>${formatTime(rec.Timestamp)}</td><td><span class="badge bg-success">Registrado</span></td></tr>`;
+            });
+        } else {
+            tableBody.innerHTML = `<tr><td colspan="3" class="text-center">No hay registros hoy.</td></tr>`;
+        }
+    }
+    
+    async function processAttendance(studentId) {
+        // En una app real, aquí se verificaría la membresía del alumno antes de registrar.
+        // Por simplicidad, este frontend asume que el backend hace esa validación.
+        // Aquí solo registramos la asistencia.
+        const student = localData.students.find(s => s.StudentID === studentId);
+        if (!student) {
+            showAppModal('Error', `Alumno con ID ${studentId} no encontrado.`, 'error');
+            return;
+        }
+
+        const attendanceData = { StudentID: studentId, AdminUserID: ADMIN_USER_ID };
+        const result = await apiRequest('/attendance/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(attendanceData)
+        });
+
+        if (result) {
+            showAppModal('Asistencia Registrada', `Se registró la asistencia para ${student.Nombre} ${student.Apellido}.`, 'success');
+            await fetchTodayAttendance(); // Actualizar la tabla de asistencia
+            // Actualizar el panel de "Último Registro"
+            const infoContainer = document.getElementById('last-attendance-info-container');
+            infoContainer.innerHTML = `<div class="text-center p-3 text-success"><i class="fas fa-check-circle fa-2x mb-2"></i><h5 class="mb-1">${student.Nombre} ${student.Apellido}</h5><p class="mb-1">Ingreso registrado: ${formatTime(new Date().toISOString())}</p></div>`;
+        }
+    }
+
+
+    // --- HELPERS & INITIALIZATION ---
+    function populateAllStudentSelects() {
+        const selects = document.querySelectorAll('.student-select, #membership-student-select, #qr-student-select, #routine-student-select');
+        selects.forEach(select => {
+            const currentVal = select.value;
+            select.innerHTML = '<option selected disabled value="">Seleccionar alumno...</option>';
+            localData.students.forEach(student => {
+                select.innerHTML += `<option value="${student.StudentID}">${student.Nombre} ${student.Apellido}</option>`;
+            });
+            select.value = currentVal;
+        });
+    }
+
+    function calculateEndDate() {
+        const startDateInput = document.getElementById('membership-start-date');
+        const type = document.getElementById('membership-type').value;
+        const endDateInput = document.getElementById('membership-end-date');
+
+        if (startDateInput.value && type) {
+            const startDate = new Date(startDateInput.value + "T00:00:00");
+            let endDate = new Date(startDate);
+
+            switch (type) {
+                case 'mensual': endDate.setMonth(startDate.getMonth() + 1); break;
+                case 'trimestral': endDate.setMonth(startDate.getMonth() + 3); break;
+                case 'semestral': endDate.setMonth(startDate.getMonth() + 6); break;
+                case 'anual': endDate.setFullYear(startDate.getFullYear() + 1); break;
+                case 'clase_unica': break; // Es el mismo día
+                default: return;
+            }
+            endDateInput.value = endDate.toISOString().split('T')[0];
+        }
+    }
+
+    async function fetchRoutinesForStudent(studentId) {
+        if (!studentId) {
+            localData.routines = [];
+        } else {
+            const routines = await apiRequest(`/routines/student/${studentId}`);
+            localData.routines = routines || [];
+        }
+        renderAssignedRoutinesTable();
+    }
+    
+    function renderPaymentsTable() {
+        const tableBody = document.getElementById('upcoming-payments-table-body');
+        tableBody.innerHTML = '';
+        const today = new Date();
+        const upcoming = localData.memberships.filter(mem => {
+            const endDate = new Date(mem.EndDate);
+            return mem.PaymentStatus === 'pendiente' || endDate < new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
+        });
+
+        if (upcoming.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="6" class="text-center">No hay pagos pendientes o próximos a vencer.</td></tr>';
+            return;
+        }
+
+        upcoming.forEach(mem => {
+            const isExpired = new Date(mem.EndDate) < today;
+            const statusClass = isExpired ? 'bg-danger' : 'bg-warning text-dark';
+            const statusText = mem.PaymentStatus === 'pendiente' ? 'Pendiente' : (isExpired ? 'Vencido' : 'Próximo a Vencer');
+            
+            tableBody.innerHTML += `
+                <tr>
+                    <td>${mem.StudentName}</td>
+                    <td>${mem.Type}</td>
+                    <td>${formatDate(mem.EndDate)}</td>
+                    <td>$${mem.Amount}</td>
+                    <td><span class="badge ${statusClass}">${statusText}</span></td>
+                    <td>
+                        ${mem.PaymentStatus === 'pendiente' ? `<button class="btn btn-sm btn-success mark-paid-btn" data-id="${mem.MembershipID}">Marcar Pagado</button>` : 'Pagado'}
+                    </td>
+                </tr>`;
+        });
+        document.querySelectorAll('.mark-paid-btn').forEach(btn => btn.onclick = handleMarkAsPaid);
+    }
+    
+    async function handleMarkAsPaid(e) {
+        const membershipId = e.currentTarget.dataset.id;
+        const membership = localData.memberships.find(m => m.MembershipID === membershipId);
+        showAppModal('Confirmar Pago', `¿Marcar la membresía de ${membership.StudentName} como pagada?`, 'info', async () => {
+            const result = await apiRequest(`/memberships/${membershipId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ PaymentStatus: 'pagado', LastPaymentDate: new Date().toISOString() })
+            });
+            if(result) {
+                showAppModal('Éxito', 'Membresía marcada como pagada.', 'success');
+                await fetchAllData();
+            }
+        });
+    }
+
+    // --- EVENT LISTENERS & INITIALIZATION ---
+    document.addEventListener('DOMContentLoaded', () => {
+        // Initialize Quill editor
+        quill = new Quill('#editor-container', {
+            modules: { toolbar: [['bold', 'italic', 'underline'], [{ list: 'ordered' }, { list: 'bullet' }]] },
+            placeholder: 'Describe la rutina aquí...',
+            theme: 'snow'
+        });
+
+        // Sidebar Navigation
+        document.querySelectorAll('.sidebar .nav-link').forEach(link => {
+            link.addEventListener('click', function() {
+                document.querySelectorAll('.sidebar .nav-link').forEach(l => l.classList.remove('active'));
+                this.classList.add('active');
+                const sectionId = this.dataset.section;
+                document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+                document.getElementById(`${sectionId}-section`).classList.add('active');
+                document.getElementById('navbar-title').textContent = this.textContent.trim();
+                if (sectionId === 'attendance') fetchTodayAttendance();
+                if (window.innerWidth < 992) document.querySelector('.sidebar').classList.remove('show');
+            });
+        });
+        
+        // Toggle Buttons
+        document.getElementById('add-student-form-toggle-btn').onclick = () => {
+            document.getElementById('add-student-form-container').style.display = 'block';
+            document.getElementById('add-student-form').reset();
+            document.getElementById('edit-student-id').value = '';
+            document.getElementById('student-form-title').textContent = 'Registrar Nuevo Alumno';
+        };
+        document.getElementById('cancel-student-btn').onclick = () => document.getElementById('add-student-form-container').style.display = 'none';
+
+        document.getElementById('add-membership-form-toggle-btn').onclick = () => {
+            document.getElementById('add-membership-form-container').style.display = 'block';
+            document.getElementById('add-membership-form').reset();
+            document.getElementById('edit-membership-id').value = '';
+            document.getElementById('membership-form-title').textContent = 'Nueva Membresía';
+        };
+        document.getElementById('cancel-membership-btn').onclick = () => document.getElementById('add-membership-form-container').style.display = 'none';
+        
+        document.getElementById('routine-form-toggle-btn').onclick = () => {
+            document.getElementById('routine-form-container').style.display = 'block';
+            document.getElementById('routine-form').reset();
+            if(quill) quill.setText('');
+            document.getElementById('edit-routine-id').value = '';
+            document.getElementById('routine-form-title').textContent = 'Asignar/Crear Rutina';
+            document.getElementById('cancel-routine-edit-btn').style.display = 'none';
+        };
+        document.getElementById('cancel-routine-edit-btn').onclick = () => document.getElementById('routine-form-container').style.display = 'none';
+
+
+        // Form Submissions
+        document.getElementById('add-student-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const studentId = document.getElementById('edit-student-id').value;
+            const payload = {
+                Nombre: document.getElementById('student-nombre').value,
+                Apellido: document.getElementById('student-apellido').value,
+                Email: document.getElementById('student-email').value || null,
+                Telefono: document.getElementById('student-telefono').value || null,
+                FechaNacimiento: document.getElementById('student-fecha-nacimiento').value || null,
+                Direccion: document.getElementById('student-direccion').value || null,
+                AdminUserID: ADMIN_USER_ID
+            };
+
+            let result;
+            if (studentId) { // Update
+                result = await apiRequest(`/students/${studentId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            } else { // Create
+                payload.StudentID = crypto.randomUUID(); // Generate ID client-side
+                result = await apiRequest('/students/', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            }
+
+            if(result) {
+                showAppModal('Éxito', 'Alumno guardado correctamente.', 'success');
+                document.getElementById('add-student-form-container').style.display = 'none';
+                await fetchAllData();
+            }
+        };
+        
+        document.getElementById('add-membership-form').onsubmit = async (e) => {
+             e.preventDefault();
+             const membershipId = document.getElementById('edit-membership-id').value;
+             const studentSelect = document.getElementById('membership-student-select');
+             const studentName = studentSelect.options[studentSelect.selectedIndex].text;
+             const payload = {
+                 StudentID: document.getElementById('membership-student-select').value,
+                 StudentName: studentName,
+                 Type: document.getElementById('membership-type').value,
+                 StartDate: new Date(document.getElementById('membership-start-date').value).toISOString(),
+                 EndDate: new Date(document.getElementById('membership-end-date').value).toISOString(),
+                 Amount: parseFloat(document.getElementById('membership-amount').value),
+                 PaymentStatus: document.getElementById('membership-payment-status').value,
+                 AdminUserID: ADMIN_USER_ID
+             };
+             
+             let result;
+             if(membershipId) {
+                result = await apiRequest(`/memberships/${membershipId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+             } else {
+                payload.MembershipID = crypto.randomUUID();
+                result = await apiRequest('/memberships/', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+             }
+             
+             if(result) {
+                showAppModal('Éxito', 'Membresía guardada.', 'success');
+                document.getElementById('add-membership-form-container').style.display = 'none';
+                await fetchAllData();
+             }
+        };
+        
+        document.getElementById('routine-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const routineId = document.getElementById('edit-routine-id').value;
+            const studentSelect = document.getElementById('routine-student-select');
+            const studentName = studentSelect.options[studentSelect.selectedIndex].text;
+            const payload = {
+                StudentID: document.getElementById('routine-student-select').value,
+                StudentName: studentName,
+                RoutineName: document.getElementById('routine-name').value,
+                ContentHTML: quill.root.innerHTML,
+                AdminUserID: ADMIN_USER_ID
+            };
+            
+            let result;
+            if(routineId) {
+                result = await apiRequest(`/routines/${routineId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            } else {
+                payload.RoutineID = crypto.randomUUID();
+                result = await apiRequest('/routines/', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            }
+            
+            if(result) {
+                showAppModal('Éxito', 'Rutina guardada.', 'success');
+                document.getElementById('routine-form-container').style.display = 'none';
+                await fetchRoutinesForStudent(payload.StudentID);
+            }
+        };
+
+        // Other Listeners
+        document.getElementById('search-student').oninput = renderStudentsTable;
+        document.getElementById('search-membership').oninput = renderMembershipsTable;
+        document.getElementById('search-assigned-routine').oninput = renderAssignedRoutinesTable;
+        document.getElementById('logout-btn').onclick = fetchAllData;
+        document.getElementById('membership-type').onchange = calculateEndDate;
+        document.getElementById('membership-start-date').onchange = calculateEndDate;
+        document.getElementById('routine-student-select').onchange = (e) => fetchRoutinesForStudent(e.target.value);
+        document.getElementById('submit-manual-code-btn').onclick = () => {
+            const studentId = document.getElementById('qr-code-manual').value;
+            if (studentId) processAttendance(studentId);
+            else showAppModal('Error', 'Por favor, ingresa un ID de alumno.', 'warning');
+        };
+        
+        // Initial Data Load
+        fetchAllData();
+    });
+  </script>
+</body>
+</html>

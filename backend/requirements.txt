@@ -1,0 +1,7 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+pydantic[email] # Modificado para incluir la validación de email
+pyodbc
+python-dotenv
+uuid

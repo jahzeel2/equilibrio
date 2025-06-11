@@ -1,0 +1,2338 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sistema de Gestión de Gimnasio</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+  <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+  <style id="app-style">
+    :root {
+      --primary: #4361ee;
+      --secondary: #3f37c9;
+      --success: #4cc9f0;
+      --danger: #f72585;
+      --warning: #f8961e;
+      --info: #90e0ef;
+      --sidebar-width: 280px;
+    }
+    
+    body {
+      font-family: 'Roboto', sans-serif;
+      background-color: #f8f9fa;
+      overflow-x: hidden;
+    }
+    
+    .sidebar {
+      position: fixed;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: var(--sidebar-width);
+      background-color: var(--primary);
+      transition: all 0.3s;
+      z-index: 1000;
+      padding-top: 20px; /* Adjusted for app title */
+      box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar-header {
+        padding: 15px 20px;
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: white;
+        text-align: center;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .sidebar .nav-link {
+      color: rgba(255, 255, 255, 0.85);
+      border-radius: 0;
+      margin-bottom: 5px;
+      padding: 15px 20px;
+      transition: all 0.3s;
+    }
+    
+    .sidebar .nav-link:hover, 
+    .sidebar .nav-link.active {
+      background-color: rgba(255, 255, 255, 0.1);
+      color: white;
+      padding-left: 25px;
+    }
+    
+    .sidebar .nav-link i {
+      margin-right: 10px;
+      width: 20px;
+      text-align: center;
+    }
+    
+    .main-content {
+      margin-left: var(--sidebar-width);
+      padding: 20px;
+      padding-top: 80px; /* Space for fixed navbar */
+      transition: all 0.3s;
+    }
+    
+    .navbar {
+      position: fixed;
+      top: 0;
+      left: var(--sidebar-width);
+      right: 0;
+      z-index: 999;
+      height: 60px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      background-color: white;
+      transition: all 0.3s;
+    }
+    
+    .card {
+      border-radius: 10px;
+      border: none;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+      margin-bottom: 20px;
+      transition: all 0.3s;
+    }
+    
+    .card:hover {
+      box-shadow: 0 5px 30px rgba(0, 0, 0, 0.1);
+    }
+    
+    .card-header {
+      background-color: white;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+      font-weight: 600;
+      padding: 15px 20px;
+    }
+    
+    .btn-primary {
+      background-color: var(--primary);
+      border-color: var(--primary);
+    }
+    
+    .btn-primary:hover {
+      background-color: var(--secondary);
+      border-color: var(--secondary);
+    }
+        
+    .toggle-sidebar-btn { /* Renamed from .toggle-sidebar to avoid conflict */
+      position: fixed;
+      top: 15px;
+      left: 20px;
+      z-index: 1001;
+      cursor: pointer;
+      color: white; /* Default color, will be changed by JS if sidebar is hidden */
+      display: none; /* Hidden by default on larger screens */
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+    }
+    
+    .user-profile {
+      display: flex;
+      align-items: center;
+      padding: 15px 20px;
+      margin-bottom: 20px;
+      color: white;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .user-profile img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      margin-right: 10px;
+      object-fit: cover;
+    }
+    
+    .user-profile .user-info {
+      line-height: 1.2;
+    }
+    
+    .user-profile .user-name {
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+    
+    .user-profile .user-role {
+      font-size: 0.8rem;
+      opacity: 0.8;
+    }
+    
+    .content-header {
+      margin-bottom: 25px;
+    }
+    
+    .content-title {
+      margin-bottom: 5px;
+      font-weight: 600;
+    }
+    
+    .content-subtitle {
+      color: #6c757d;
+      font-size: 0.9rem;
+    }
+    
+    .section {
+      display: none;
+      animation: fadeIn 0.5s;
+    }
+    
+    .section.active {
+      display: block;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+        
+    .qr-container {
+      text-align: center;
+      padding: 20px;
+    }
+    
+    #generated-qr-image-container { /* Changed ID to be more specific */
+      max-width: 250px;
+      margin: 20px auto;
+      border: 1px solid #ddd;
+      padding: 10px;
+      background-color: white;
+      min-height: 200px; /* Ensure space for QR */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #generated-qr-image-container img {
+        max-width: 100%;
+        max-height: 100%;
+    }
+    
+    #qr-reader {
+      width: 100%;
+      max-width: 400px; /* Adjusted for better layout */
+      min-height: 300px; /* Ensure space for camera view */
+      margin: 0 auto;
+      border: 1px solid #ddd;
+      background-color: #f0f0f0;
+    }
+        
+    #editor-container {
+      height: 300px; /* Adjusted height */
+    }
+
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.5);
+        z-index: 2000;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    .loading-overlay .spinner-border {
+        width: 3rem;
+        height: 3rem;
+    }
+    
+    /* Responsive */
+    @media (max-width: 992px) {
+      .sidebar {
+        transform: translateX(-100%);
+      }
+      
+      .main-content, .navbar {
+        margin-left: 0;
+        left: 0;
+      }
+      
+      .sidebar.show {
+        transform: translateX(0);
+      }
+      
+      .toggle-sidebar-btn {
+        display: block;
+        color: var(--primary); /* Color when sidebar is hidden */
+      }
+      .sidebar.show + .toggle-sidebar-btn { /* Color when sidebar is shown */
+          color: white;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="loading-overlay" id="loading-overlay" style="display: none;">
+    <div class="spinner-border text-light" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+  </div>
+
+  <button class="toggle-sidebar-btn">
+    <i class="fas fa-bars"></i>
+  </button>
+  
+  <div class="sidebar">
+    <div class="sidebar-header">
+        GymSys
+    </div>
+    <div class="user-profile">
+      <img src="https://placehold.co/40x40/EBF4FF/76808A?text=U" alt="Usuario" id="sidebar-user-img">
+      <div class="user-info">
+        <div class="user-name" id="sidebar-user-name">Cargando...</div>
+        <div class="user-role" id="sidebar-user-role">Admin</div>
+        <div class="user-id small" id="sidebar-user-id" style="font-size: 0.7rem; opacity: 0.7;"></div>
+      </div>
+    </div>
+    <ul class="nav flex-column flex-grow-1">
+      <li class="nav-item">
+        <a class="nav-link active" href="javascript:void(0)" data-section="profile">
+          <i class="fas fa-user"></i> Mi Perfil
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="javascript:void(0)" data-section="students">
+          <i class="fas fa-users"></i> Alumnos
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="javascript:void(0)" data-section="memberships">
+          <i class="fas fa-id-card"></i> Membresías
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="javascript:void(0)" data-section="qr">
+          <i class="fas fa-qrcode"></i> Generar QR
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="javascript:void(0)" data-section="attendance">
+          <i class="fas fa-clipboard-check"></i> Asistencia
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="javascript:void(0)" data-section="routines">
+          <i class="fas fa-dumbbell"></i> Rutinas
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="javascript:void(0)" data-section="payments">
+          <i class="fas fa-credit-card"></i> Pagos y Recordatorios
+        </a>
+      </li>
+    </ul>
+    <div class="mt-auto p-3">
+        <button class="btn btn-danger w-100" id="logout-btn">
+            <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+        </button>
+    </div>
+  </div>
+  
+  <nav class="navbar">
+    <div class="container-fluid">
+      <span class="navbar-brand mb-0 h1" id="navbar-title">Mi Perfil</span>
+      <span class="navbar-text me-3" id="navbar-user-id-display" title="Tu ID de Administrador"></span>
+    </div>
+  </nav>
+  
+  <div class="main-content">
+    
+    <div id="profile-section" class="section active">
+      <div class="content-header">
+        <h2 class="content-title">Mi Perfil</h2>
+        <p class="content-subtitle">Administra tu información personal como administrador.</p>
+      </div>
+      
+      <div class="card">
+        <div class="card-header">
+          Información Personal
+        </div>
+        <div class="card-body">
+          <form id="profile-form">
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label for="profile-nombre" class="form-label">Nombre</label>
+                <input type="text" class="form-control" id="profile-nombre" required>
+              </div>
+              <div class="col-md-6">
+                <label for="profile-apellido" class="form-label">Apellido</label>
+                <input type="text" class="form-control" id="profile-apellido">
+              </div>
+            </div>
+            
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label for="profile-email" class="form-label">Email</label>
+                <input type="email" class="form-control" id="profile-email" required readonly> </div>
+              <div class="col-md-6">
+                <label for="profile-telefono" class="form-label">Teléfono</label>
+                <input type="text" class="form-control" id="profile-telefono">
+              </div>
+            </div>
+            
+            <div class="text-end">
+              <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i> Guardar Cambios
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+      
+      <div class="card">
+        <div class="card-header">
+          Cambiar Contraseña
+        </div>
+        <div class="card-body">
+          <form id="password-form">
+            <div class="mb-3">
+              <label for="password-actual" class="form-label">Contraseña Actual (si aplica)</label>
+              <input type="password" class="form-control" id="password-actual">
+            </div>
+            
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label for="password-nuevo" class="form-label">Nueva Contraseña</label>
+                <input type="password" class="form-control" id="password-nuevo" required>
+              </div>
+              <div class="col-md-6">
+                <label for="password-confirmar" class="form-label">Confirmar Contraseña</label>
+                <input type="password" class="form-control" id="password-confirmar" required>
+              </div>
+            </div>
+            
+            <div class="text-end">
+              <button type="submit" class="btn btn-primary">
+                <i class="fas fa-key"></i> Actualizar Contraseña
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div id="students-section" class="section">
+        <div class="content-header">
+            <h2 class="content-title">Alumnos</h2>
+            <p class="content-subtitle">Gestiona la información de los alumnos.</p>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Registrar Nuevo Alumno</span>
+                <button class="btn btn-sm btn-primary" id="add-student-form-toggle-btn">
+                    <i class="fas fa-plus"></i> Agregar Alumno
+                </button>
+            </div>
+            <div class="card-body" id="add-student-form-container" style="display: none;">
+                <form id="add-student-form">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="student-nombre" class="form-label">Nombre</label>
+                            <input type="text" class="form-control" id="student-nombre" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="student-apellido" class="form-label">Apellido</label>
+                            <input type="text" class="form-control" id="student-apellido" required>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="student-email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="student-email">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="student-telefono" class="form-label">Teléfono</label>
+                            <input type="text" class="form-control" id="student-telefono">
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                         <div class="col-md-6">
+                            <label for="student-fecha-nacimiento" class="form-label">Fecha de Nacimiento</label>
+                            <input type="date" class="form-control" id="student-fecha-nacimiento">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="student-direccion" class="form-label">Dirección</label>
+                            <input type="text" class="form-control" id="student-direccion">
+                        </div>
+                    </div>
+                    <input type="hidden" id="edit-student-id">
+                    <div class="text-end">
+                        <button type="button" class="btn btn-secondary me-2" id="cancel-student-btn">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Guardar Alumno</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Lista de Alumnos</span>
+                <div class="input-group" style="max-width: 300px;">
+                    <input type="text" class="form-control" placeholder="Buscar alumno..." id="search-student">
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Email</th>
+                                <th>Teléfono</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="students-table-body">
+                            <tr><td colspan="4" class="text-center">Cargando alumnos...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="memberships-section" class="section">
+      <div class="content-header">
+        <h2 class="content-title">Membresías</h2>
+        <p class="content-subtitle">Gestiona las membresías de los alumnos</p>
+      </div>
+      
+      <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <span>Nueva Membresía</span>
+          <button class="btn btn-sm btn-primary" id="add-membership-form-toggle-btn">
+            <i class="fas fa-plus"></i> Agregar Membresía
+          </button>
+        </div>
+        <div class="card-body" id="add-membership-form-container" style="display: none;">
+          <form id="add-membership-form">
+            <input type="hidden" id="edit-membership-id">
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label for="membership-student-select" class="form-label">Alumno</label>
+                <select class="form-select" id="membership-student-select" required>
+                  <option selected disabled value="">Seleccionar alumno...</option>
+                  </select>
+              </div>
+              <div class="col-md-6">
+                <label for="membership-type" class="form-label">Tipo de Membresía</label>
+                <select class="form-select" id="membership-type" required>
+                  <option selected disabled value="">Seleccionar tipo...</option>
+                  <option value="mensual">Mensual</option>
+                  <option value="trimestral">Trimestral</option>
+                  <option value="semestral">Semestral</option>
+                  <option value="anual">Anual</option>
+                  <option value="clase_unica">Clase Única</option>
+                </select>
+              </div>
+            </div>
+            
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label for="membership-start-date" class="form-label">Fecha de Inicio</label>
+                <input type="date" class="form-control" id="membership-start-date" required>
+              </div>
+              <div class="col-md-6">
+                <label for="membership-end-date" class="form-label">Fecha de Vencimiento</label>
+                <input type="date" class="form-control" id="membership-end-date" required>
+              </div>
+            </div>
+            
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label for="membership-amount" class="form-label">Monto</label>
+                <div class="input-group">
+                  <span class="input-group-text">$</span>
+                  <input type="number" class="form-control" id="membership-amount" step="0.01" required>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <label for="membership-payment-status" class="form-label">Estado de Pago</label>
+                <select class="form-select" id="membership-payment-status" required>
+                  <option value="pagado">Pagado</option>
+                  <option value="pendiente">Pendiente</option>
+                </select>
+              </div>
+            </div>
+            
+            <div class="text-end">
+              <button type="button" class="btn btn-secondary me-2" id="cancel-membership-btn">Cancelar</button>
+              <button type="submit" class="btn btn-primary">Guardar Membresía</button>
+            </div>
+          </form>
+        </div>
+      </div>
+      
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <span>Membresías Registradas</span>
+          <div class="input-group" style="max-width: 300px;">
+            <input type="text" class="form-control" placeholder="Buscar membresía..." id="search-membership">
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>Alumno</th>
+                  <th>Tipo</th>
+                  <th>Inicio</th>
+                  <th>Vencimiento</th>
+                  <th>Monto</th>
+                  <th>Estado Pago</th>
+                  <th>Estado Memb.</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="memberships-table-body">
+                <tr><td colspan="8" class="text-center">Cargando membresías...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div id="qr-section" class="section">
+      <div class="content-header">
+        <h2 class="content-title">Generar QR de Acceso</h2>
+        <p class="content-subtitle">Genera códigos QR para el acceso de los alumnos con membresía activa.</p>
+      </div>
+      
+      <div class="card">
+        <div class="card-header">
+          Generación de Código QR
+        </div>
+        <div class="card-body">
+          <div class="row mb-4">
+            <div class="col-md-6">
+              <label for="qr-student-select" class="form-label">Seleccionar Alumno (con membresía activa)</label>
+              <select class="form-select" id="qr-student-select">
+                <option selected disabled value="">Seleccionar alumno...</option>
+                </select>
+            </div>
+            <div class="col-md-6 d-flex align-items-end">
+              <button class="btn btn-primary w-100" id="generate-qr-btn">
+                <i class="fas fa-qrcode me-2"></i> Generar QR
+              </button>
+            </div>
+          </div>
+          
+          <div class="qr-container" id="qr-result-container" style="display: none;">
+            <div class="alert alert-info mb-4">
+              <i class="fas fa-info-circle me-2"></i> 
+              Este código QR es único para el alumno y su membresía actual. Sirve para marcar su asistencia.
+            </div>
+            
+            <div id="generated-qr-image-container">
+              <p class="text-muted">El código QR aparecerá aquí.</p>
+            </div>
+            
+            <div class="mt-3">
+              <button class="btn btn-success" id="download-qr-btn" style="display:none;">
+                <i class="fas fa-download me-2"></i> Descargar QR
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div id="attendance-section" class="section">
+      <div class="content-header">
+        <h2 class="content-title">Control de Asistencia</h2>
+        <p class="content-subtitle">Registra la asistencia de los alumnos mediante códigos QR.</p>
+      </div>
+      
+      <div class="row">
+        <div class="col-md-6">
+          <div class="card">
+            <div class="card-header">
+              Escanear Código QR
+            </div>
+            <div class="card-body">
+              <div class="mb-3">
+                <div class="form-check form-check-inline">
+                  <input class="form-check-input" type="radio" name="scan-type" id="scan-camera" value="camera" checked>
+                  <label class="form-check-label" for="scan-camera">Usar cámara</label>
+                </div>
+                <div class="form-check form-check-inline">
+                  <input class="form-check-input" type="radio" name="scan-type" id="scan-manual" value="manual">
+                  <label class="form-check-label" for="scan-manual">Ingresar código manualmente</label>
+                </div>
+              </div>
+              
+              <div id="camera-scanner-container">
+                <div class="alert alert-info mb-3"> <i class="fas fa-camera me-2"></i> 
+                  Apunta la cámara al código QR del alumno.
+                </div>
+                
+                <div id="qr-reader" class="mb-3"></div>
+                <div id="qr-reader-results" class="mt-2 small"></div>
+                <button class="btn btn-primary w-100 mt-2" id="start-scanner-btn">
+                  <i class="fas fa-play me-2"></i> Iniciar Escáner
+                </button>
+                 <button class="btn btn-danger w-100 mt-2" id="stop-scanner-btn" style="display:none;">
+                  <i class="fas fa-stop me-2"></i> Detener Escáner
+                </button>
+              </div>
+              
+              <div id="manual-input-container" style="display: none;">
+                <div class="mb-3">
+                  <label for="qr-code-manual" class="form-label">ID del Alumno (del QR)</label>
+                  <input type="text" class="form-control" id="qr-code-manual" placeholder="Ingresa el ID del alumno del QR">
+                </div>
+                
+                <button class="btn btn-primary w-100" id="submit-manual-code-btn">
+                  <i class="fas fa-check me-2"></i> Verificar Asistencia
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-md-6">
+          <div class="card">
+            <div class="card-header">
+              Registro de Asistencia del Día (<span id="current-date-attendance"></span>)
+            </div>
+            <div class="card-body">
+              <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                <table class="table table-sm table-hover">
+                  <thead>
+                    <tr>
+                      <th>Alumno</th>
+                      <th>Hora Ingreso</th>
+                      <th>Estado Memb.</th>
+                    </tr>
+                  </thead>
+                  <tbody id="attendance-log-table-body">
+                    <tr><td colspan="3" class="text-center">No hay registros de asistencia hoy.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          
+          <div class="card mt-4">
+            <div class="card-header">
+              Último Registro / Verificación
+            </div>
+            <div class="card-body" id="last-attendance-info-container">
+                <div class="text-center p-3 text-muted">
+                    <i class="fas fa-user-clock fa-2x mb-2"></i>
+                    <p>Esperando escaneo o ingreso manual...</p>
+                </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div id="routines-section" class="section">
+      <div class="content-header">
+        <h2 class="content-title">Rutinas de Entrenamiento</h2>
+        <p class="content-subtitle">Crea y asigna rutinas personalizadas a los alumnos.</p>
+      </div>
+      
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span id="routine-form-title">Asignar/Crear Rutina</span>
+            <button class="btn btn-sm btn-info" id="routine-form-toggle-btn">
+                <i class="fas fa-plus"></i> Nueva Rutina
+            </button>
+        </div>
+        <div class="card-body" id="routine-form-container" style="display:none;">
+          <form id="routine-form">
+            <input type="hidden" id="edit-routine-id">
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label for="routine-student-select" class="form-label">Seleccionar Alumno</label>
+                <select class="form-select" id="routine-student-select" required>
+                  <option selected disabled value="">Seleccionar alumno...</option>
+                  </select>
+              </div>
+              <div class="col-md-6">
+                <label for="routine-name" class="form-label">Nombre de la Rutina / Plantilla</label>
+                 <input type="text" class="form-control" id="routine-name" placeholder="Ej: Rutina de Fuerza Dia 1, Plantilla Principiante">
+              </div>
+            </div>
+             <div class="row mb-3">
+                <div class="col-md-12">
+                    <label for="routine-template-select" class="form-label">Cargar desde Plantilla (Opcional)</label>
+                    <select class="form-select" id="routine-template-select">
+                        <option selected disabled value="">No usar plantilla</option>
+                        <option value="principiante">Principiante</option>
+                        <option value="intermedio">Intermedio</option>
+                        <option value="avanzado">Avanzado</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="mb-3">
+              <label class="form-label">Descripción de la Rutina</label>
+              <div id="editor-container"></div> </div>
+            
+            <div class="d-flex justify-content-between">
+              <button type="button" class="btn btn-secondary" id="clear-routine-btn">
+                <i class="fas fa-eraser me-2"></i> Limpiar Editor
+              </button>
+              <div>
+                <button type="button" class="btn btn-light me-2" id="cancel-routine-edit-btn" style="display:none;">
+                    <i class="fas fa-times me-2"></i> Cancelar Edición
+                </button>
+                <button type="submit" class="btn btn-primary" id="save-routine-btn">
+                    <i class="fas fa-save me-2"></i> Guardar Rutina
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+      
+      <div class="card mt-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <span>Rutinas Asignadas</span>
+          <div class="input-group" style="max-width: 300px;">
+            <input type="text" class="form-control" placeholder="Buscar rutina..." id="search-assigned-routine">
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>Alumno</th>
+                  <th>Nombre Rutina</th>
+                  <th>Fecha Asignación</th>
+                  <th>Última Actualización</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="assigned-routines-table-body">
+                <tr><td colspan="5" class="text-center">Cargando rutinas...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div id="payments-section" class="section">
+      <div class="content-header">
+        <h2 class="content-title">Pagos y Recordatorios</h2>
+        <p class="content-subtitle">Administra los pagos y configura recordatorios.</p>
+      </div>
+      
+      <div class="row">
+        <div class="col-lg-8">
+          <div class="card">
+            <div class="card-header">
+              Membresías con Pagos Pendientes o Próximos a Vencer
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="table table-hover">
+                  <thead>
+                    <tr>
+                      <th>Alumno</th>
+                      <th>Tipo Memb.</th>
+                      <th>Vencimiento</th>
+                      <th>Monto</th>
+                      <th>Estado Pago</th>
+                      <th>Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody id="upcoming-payments-table-body">
+                    <tr><td colspan="6" class="text-center">Cargando información de pagos...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          
+          <div class="card mt-4">
+            <div class="card-header">
+              Historial de Pagos (Membresías Pagadas)
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="table table-hover">
+                  <thead>
+                    <tr>
+                      <th>Alumno</th>
+                      <th>Concepto</th>
+                      <th>Fecha Pago</th>
+                      <th>Monto</th>
+                      <th>Registrado Por</th>
+                    </tr>
+                  </thead>
+                  <tbody id="payment-history-table-body">
+                    <tr><td colspan="5" class="text-center">Cargando historial de pagos...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-lg-4">
+          <div class="card">
+            <div class="card-header">
+              Configuración de Recordatorios (Simulado)
+            </div>
+            <div class="card-body">
+              <p class="text-muted small">La funcionalidad de envío automático de recordatorios requiere un backend. Esta sección es para demostración de la configuración.</p>
+              <form id="reminder-settings-form">
+                  <div class="mb-3">
+                    <label class="form-label">Enviar recordatorios</label>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" id="enable-reminders" checked>
+                      <label class="form-check-label" for="enable-reminders">Activar recordatorios automáticos</label>
+                    </div>
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label for="reminder-days" class="form-label">Días de anticipación</label>
+                    <select class="form-select" id="reminder-days">
+                      <option value="3">3 días antes</option>
+                      <option value="5" selected>5 días antes</option>
+                      <option value="7">7 días antes</option>
+                      <option value="10">10 días antes</option>
+                    </select>
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label class="form-label">Método de notificación (simulado)</label>
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" id="notify-email" checked>
+                      <label class="form-check-label" for="notify-email">Email</label>
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" id="notify-sms">
+                      <label class="form-check-label" for="notify-sms">SMS</label>
+                    </div>
+                  </div>
+                  
+                  <div class="d-grid">
+                    <button type="submit" class="btn btn-primary">
+                      <i class="fas fa-save me-2"></i> Guardar Configuración
+                    </button>
+                  </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div> <div class="modal fade" id="appModal" tabindex="-1" aria-labelledby="appModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="appModalLabel">Notificación</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="appModalBody">
+        ...
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="appModalCloseButton">Cerrar</button>
+        <button type="button" class="btn btn-primary" id="appModalConfirmButton" style="display:none;">Confirmar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://unpkg.com/html5-qrcode/html5-qrcode.min.js"></script>
+
+  <script type="module">
+    // Firebase V9+ modular SDK
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, signOut, updatePassword, EmailAuthProvider, reauthenticateWithCredential } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, getDocs, Timestamp, serverTimestamp, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js"; // For debugging
+
+    // --- Firebase Configuration ---
+    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+      apiKey: "YOUR_API_KEY", // Replace if not using __firebase_config
+      authDomain: "YOUR_AUTH_DOMAIN",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_STORAGE_BUCKET",
+      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-gym-app';
+
+    // --- Initialize Firebase ---
+    const firebaseApp = initializeApp(firebaseConfig);
+    const auth = getAuth(firebaseApp);
+    const db = getFirestore(firebaseApp);
+    setLogLevel('debug'); // Or 'silent' for production
+
+    // --- Global Variables & State ---
+    let currentUserId = null;
+    let currentUserProfile = null;
+    let quill = null; // Quill instance
+    let quillInitialized = false; // Flag for Quill initialization
+    let html5QrCode = null;
+    let currentStudents = []; // Cache for students
+    let currentMemberships = []; // Cache for memberships
+    let appModalInstance = null;
+
+
+    // --- Utility Functions ---
+    function showLoading(show = true) {
+        document.getElementById('loading-overlay').style.display = show ? 'flex' : 'none';
+    }
+
+    function showAppModal(title, message, type = 'info', onConfirm = null) {
+        const modalTitle = document.getElementById('appModalLabel');
+        const modalBody = document.getElementById('appModalBody');
+        const confirmButton = document.getElementById('appModalConfirmButton');
+        const closeButton = document.getElementById('appModalCloseButton');
+
+        modalTitle.textContent = title;
+        modalBody.innerHTML = message; 
+
+        modalBody.className = 'modal-body'; 
+        if (type === 'success') modalBody.classList.add('text-success');
+        if (type === 'error') modalBody.classList.add('text-danger');
+        if (type === 'warning') modalBody.classList.add('text-warning');
+
+        if (onConfirm && typeof onConfirm === 'function') {
+            confirmButton.style.display = 'block';
+            const confirmHandler = () => { // New handler to remove listener
+                onConfirm();
+                appModalInstance.hide();
+                confirmButton.removeEventListener('click', confirmHandler); // Clean up
+            };
+            confirmButton.addEventListener('click', confirmHandler, { once: true }); // Use once if possible or manage removal
+            closeButton.textContent = 'Cancelar';
+        } else {
+            confirmButton.style.display = 'none';
+            confirmButton.onclick = null; 
+            closeButton.textContent = 'Cerrar';
+        }
+        if (!appModalInstance) {
+            appModalInstance = new bootstrap.Modal(document.getElementById('appModal'));
+        }
+        appModalInstance.show();
+    }
+    
+    function formatDate(timestamp, includeTime = false) {
+        if (!timestamp) return 'N/A';
+        const date = timestamp.toDate();
+        const options = { year: 'numeric', month: '2-digit', day: '2-digit' };
+        if (includeTime) {
+            options.hour = '2-digit';
+            options.minute = '2-digit';
+        }
+        return date.toLocaleDateString('es-ES', options);
+    }
+
+    function formatTime(timestamp) {
+        if (!timestamp) return 'N/A';
+        const date = timestamp.toDate();
+        return date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    }
+
+    function getMembershipStatus(membership) {
+        const today = new Date();
+        today.setHours(0,0,0,0); 
+        const endDate = membership.endDate.toDate();
+        endDate.setHours(0,0,0,0);
+
+        if (endDate < today) {
+            return '<span class="badge bg-danger">Vencida</span>';
+        } else if (membership.paymentStatus === 'pendiente') {
+            return '<span class="badge bg-warning text-dark">Pendiente Pago</span>';
+        } else {
+            const sevenDaysFromNow = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
+            if (endDate <= sevenDaysFromNow) {
+                return '<span class="badge bg-info">Próxima a Vencer</span>';
+            }
+            return '<span class="badge bg-success">Activa</span>';
+        }
+    }
+    
+    // --- Firebase Authentication ---
+    onAuthStateChanged(auth, async (user) => {
+        showLoading(true);
+        if (user) {
+            currentUserId = user.uid;
+            console.log("User is signed in:", currentUserId);
+            document.getElementById('sidebar-user-id').textContent = `ID: ${currentUserId.substring(0,12)}...`;
+            document.getElementById('navbar-user-id-display').textContent = `Admin ID: ${currentUserId}`;
+            await loadUserProfile();
+            initializeAppUIDataListeners(); 
+            initializeQuillEditor(); // Attempt Quill init after auth and profile load
+        } else {
+            currentUserId = null;
+            currentUserProfile = null;
+            console.log("User is signed out or not yet signed in.");
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    console.log("Attempting sign in with custom token.");
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    console.log("Attempting anonymous sign in.");
+                    await signInAnonymously(auth);
+                }
+            } catch (error) {
+                console.error("Sign in failed:", error);
+                showAppModal("Error de Autenticación", `No se pudo iniciar sesión: ${error.message}`, 'error');
+                showLoading(false);
+            }
+        }
+    });
+
+    async function loadUserProfile() {
+        if (!currentUserId) return;
+        const profileRef = doc(db, `artifacts/${appId}/users/${currentUserId}/profile/userData`);
+        try {
+            const docSnap = await getDoc(profileRef);
+            if (docSnap.exists()) {
+                currentUserProfile = { id: docSnap.id, ...docSnap.data() };
+                console.log("User profile loaded:", currentUserProfile);
+                updateProfileDisplays(currentUserProfile);
+            } else {
+                console.log("No user profile found, creating one for admin.");
+                const defaultName = auth.currentUser?.email ? auth.currentUser.email.split('@')[0] : "Admin";
+                currentUserProfile = {
+                    nombre: defaultName,
+                    apellido: "",
+                    email: auth.currentUser?.email || "admin@example.com",
+                    telefono: "",
+                    role: "admin" 
+                };
+                await setDoc(profileRef, currentUserProfile);
+                updateProfileDisplays(currentUserProfile);
+            }
+        } catch (error) {
+            console.error("Error loading user profile:", error);
+            showAppModal("Error de Perfil", `No se pudo cargar el perfil: ${error.message}`, 'error');
+        }
+    }
+
+    function updateProfileDisplays(profile) {
+        if (!profile) return;
+        document.getElementById('sidebar-user-name').textContent = profile.nombre ? `${profile.nombre} ${profile.apellido || ''}`.trim() : 'Administrador';
+        document.getElementById('sidebar-user-role').textContent = profile.role || 'Admin';
+        document.getElementById('profile-nombre').value = profile.nombre || '';
+        document.getElementById('profile-apellido').value = profile.apellido || '';
+        document.getElementById('profile-email').value = profile.email || auth.currentUser?.email || '';
+        document.getElementById('profile-telefono').value = profile.telefono || '';
+    }
+
+    document.getElementById('logout-btn').addEventListener('click', async () => {
+        showAppModal('Cerrar Sesión', '¿Estás seguro que deseas cerrar sesión?', 'warning', async () => {
+            try {
+                await signOut(auth);
+                console.log("User signed out.");
+                showAppModal('Sesión Cerrada', 'Has cerrado sesión exitosamente.', 'success');
+                document.getElementById('sidebar-user-name').textContent = 'Desconectado';
+                document.getElementById('sidebar-user-role').textContent = '';
+                document.getElementById('sidebar-user-id').textContent = '';
+            } catch (error) {
+                console.error("Sign out error:", error);
+                showAppModal('Error', `No se pudo cerrar sesión: ${error.message}`, 'error');
+            }
+        });
+    });
+
+    // --- Profile Section Logic ---
+    document.getElementById('profile-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (!currentUserId) {
+            showAppModal('Error', 'No hay un usuario autenticado.', 'error');
+            return;
+        }
+        showLoading(true);
+        const updatedProfile = {
+            nombre: document.getElementById('profile-nombre').value.trim(),
+            apellido: document.getElementById('profile-apellido').value.trim(),
+            email: document.getElementById('profile-email').value.trim(), 
+            telefono: document.getElementById('profile-telefono').value.trim(),
+            role: currentUserProfile?.role || 'admin', 
+            updatedAt: serverTimestamp()
+        };
+
+        const profileRef = doc(db, `artifacts/${appId}/users/${currentUserId}/profile/userData`);
+        try {
+            await setDoc(profileRef, updatedProfile, { merge: true });
+            currentUserProfile = { ...currentUserProfile, ...updatedProfile }; 
+            updateProfileDisplays(currentUserProfile);
+            showAppModal('Perfil Actualizado', 'Tu información personal ha sido guardada.', 'success');
+        } catch (error) {
+            console.error("Error updating profile:", error);
+            showAppModal('Error', `No se pudo actualizar el perfil: ${error.message}`, 'error');
+        }
+        showLoading(false);
+    });
+
+    document.getElementById('password-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const newPassword = document.getElementById('password-nuevo').value;
+        const confirmPassword = document.getElementById('password-confirmar').value;
+
+        if (newPassword !== confirmPassword) {
+            showAppModal('Error de Contraseña', 'Las nuevas contraseñas no coinciden.', 'error');
+            return;
+        }
+        if (newPassword.length < 6) {
+            showAppModal('Error de Contraseña', 'La contraseña debe tener al menos 6 caracteres.', 'error');
+            return;
+        }
+
+        showLoading(true);
+        try {
+            const user = auth.currentUser;
+            if (user) {
+                await updatePassword(user, newPassword);
+                showAppModal('Contraseña Actualizada', 'Tu contraseña ha sido cambiada exitosamente.', 'success');
+                document.getElementById('password-form').reset();
+            } else {
+                showAppModal('Error', 'No hay un usuario autenticado para cambiar la contraseña.', 'error');
+            }
+        } catch (error) {
+            console.error("Error updating password:", error);
+            let errorMessage = `No se pudo actualizar la contraseña: ${error.message}`;
+            if (error.code === 'auth/requires-recent-login') {
+                errorMessage = "Esta operación es sensible y requiere autenticación reciente. Por favor, cierra sesión y vuelve a iniciarla.";
+            }
+            showAppModal('Error de Contraseña', errorMessage, 'error');
+        }
+        showLoading(false);
+    });
+    
+    // --- Students Section Logic ---
+    const studentsCollectionRef = collection(db, `artifacts/${appId}/public/data/students`);
+
+    document.getElementById('add-student-form-toggle-btn').addEventListener('click', () => {
+        document.getElementById('add-student-form-container').style.display = 'block';
+        document.getElementById('add-student-form').reset();
+        document.getElementById('edit-student-id').value = '';
+    });
+    document.getElementById('cancel-student-btn').addEventListener('click', () => {
+        document.getElementById('add-student-form-container').style.display = 'none';
+        document.getElementById('add-student-form').reset();
+    });
+
+    document.getElementById('add-student-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        showLoading(true);
+        const studentData = {
+            nombre: document.getElementById('student-nombre').value.trim(),
+            apellido: document.getElementById('student-apellido').value.trim(),
+            email: document.getElementById('student-email').value.trim(),
+            telefono: document.getElementById('student-telefono').value.trim(),
+            fechaNacimiento: document.getElementById('student-fecha-nacimiento').value,
+            direccion: document.getElementById('student-direccion').value.trim(),
+            searchableName: `${document.getElementById('student-nombre').value.trim().toLowerCase()} ${document.getElementById('student-apellido').value.trim().toLowerCase()}`
+        };
+
+        const editStudentId = document.getElementById('edit-student-id').value;
+
+        try {
+            if (editStudentId) {
+                studentData.updatedAt = serverTimestamp();
+                const studentRef = doc(db, `artifacts/${appId}/public/data/students`, editStudentId);
+                await updateDoc(studentRef, studentData);
+                showAppModal('Alumno Actualizado', 'Información del alumno guardada.', 'success');
+            } else {
+                studentData.createdAt = serverTimestamp();
+                studentData.adminUserId = currentUserId; 
+                await addDoc(studentsCollectionRef, studentData);
+                showAppModal('Alumno Registrado', 'Nuevo alumno guardado exitosamente.', 'success');
+            }
+            document.getElementById('add-student-form').reset();
+            document.getElementById('add-student-form-container').style.display = 'none';
+        } catch (error) {
+            console.error("Error saving student:", error);
+            showAppModal('Error', `No se pudo guardar el alumno: ${error.message}`, 'error');
+        }
+        showLoading(false);
+    });
+
+    function renderStudentsTable(students) {
+        currentStudents = students; 
+        const tableBody = document.getElementById('students-table-body');
+        const searchInput = document.getElementById('search-student').value.toLowerCase();
+        tableBody.innerHTML = '';
+
+        const filteredStudents = students.filter(student => 
+            student.searchableName.includes(searchInput) || 
+            (student.email && student.email.toLowerCase().includes(searchInput))
+        );
+
+        if (filteredStudents.length === 0) {
+            tableBody.innerHTML = `<tr><td colspan="4" class="text-center">No se encontraron alumnos ${searchInput ? 'con ese criterio.' : '.'}</td></tr>`;
+            return;
+        }
+
+        filteredStudents.forEach(student => {
+            const row = tableBody.insertRow();
+            row.innerHTML = `
+                <td>${student.nombre} ${student.apellido}</td>
+                <td>${student.email || 'N/A'}</td>
+                <td>${student.telefono || 'N/A'}</td>
+                <td>
+                    <button class="btn btn-sm btn-outline-primary edit-student-btn" data-id="${student.id}"><i class="fas fa-edit"></i></button>
+                    <button class="btn btn-sm btn-outline-danger delete-student-btn" data-id="${student.id}"><i class="fas fa-trash"></i></button>
+                </td>
+            `;
+        });
+        addStudentEventListeners();
+        populateStudentSelects(students); 
+    }
+    
+    document.getElementById('search-student').addEventListener('input', () => renderStudentsTable(currentStudents));
+
+    function addStudentEventListeners() {
+        document.querySelectorAll('.edit-student-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const studentId = e.currentTarget.dataset.id;
+                const student = currentStudents.find(s => s.id === studentId);
+                if (student) {
+                    document.getElementById('student-nombre').value = student.nombre;
+                    document.getElementById('student-apellido').value = student.apellido;
+                    document.getElementById('student-email').value = student.email || '';
+                    document.getElementById('student-telefono').value = student.telefono || '';
+                    document.getElementById('student-fecha-nacimiento').value = student.fechaNacimiento || '';
+                    document.getElementById('student-direccion').value = student.direccion || '';
+                    document.getElementById('edit-student-id').value = studentId;
+                    document.getElementById('add-student-form-container').style.display = 'block';
+                    window.scrollTo(0, document.getElementById('add-student-form-container').offsetTop);
+                }
+            });
+        });
+        document.querySelectorAll('.delete-student-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const studentId = e.currentTarget.dataset.id;
+                const student = currentStudents.find(s => s.id === studentId);
+                showAppModal('Confirmar Eliminación', `¿Seguro que deseas eliminar a ${student.nombre} ${student.apellido}? Esto también eliminará sus membresías y rutinas asociadas.`, 'warning', async () => {
+                    showLoading(true);
+                    try {
+                        const batch = writeBatch(db);
+                        const studentRef = doc(db, `artifacts/${appId}/public/data/students`, studentId);
+                        batch.delete(studentRef);
+
+                        const membershipsQuery = query(collection(db, `artifacts/${appId}/public/data/memberships`), where("studentId", "==", studentId));
+                        const membershipsSnap = await getDocs(membershipsQuery);
+                        membershipsSnap.forEach(doc => batch.delete(doc.ref));
+                        
+                        const routinesQuery = query(collection(db, `artifacts/${appId}/public/data/routines`), where("studentId", "==", studentId));
+                        const routinesSnap = await getDocs(routinesQuery);
+                        routinesSnap.forEach(doc => batch.delete(doc.ref));
+
+                        const attendanceQuery = query(collection(db, `artifacts/${appId}/public/data/attendance`), where("studentId", "==", studentId));
+                        const attendanceSnap = await getDocs(attendanceQuery);
+                        attendanceSnap.forEach(doc => batch.delete(doc.ref));
+
+                        await batch.commit();
+                        showAppModal('Alumno Eliminado', 'El alumno y sus datos asociados han sido eliminados.', 'success');
+                    } catch (error) {
+                        console.error("Error deleting student and related data:", error);
+                        showAppModal('Error', `No se pudo eliminar el alumno: ${error.message}`, 'error');
+                    }
+                    showLoading(false);
+                });
+            });
+        });
+    }
+
+    function populateStudentSelects(students) {
+        const selects = [
+            document.getElementById('membership-student-select'),
+            document.getElementById('qr-student-select'),
+            document.getElementById('routine-student-select')
+        ];
+        students.sort((a, b) => `${a.nombre} ${a.apellido}`.localeCompare(`${b.nombre} ${b.apellido}`));
+
+        selects.forEach(select => {
+            if (!select) return;
+            const currentValue = select.value; 
+            select.innerHTML = '<option selected disabled value="">Seleccionar alumno...</option>';
+            students.forEach(student => {
+                const option = document.createElement('option');
+                option.value = student.id;
+                option.textContent = `${student.nombre} ${student.apellido}`;
+                option.dataset.studentName = `${student.nombre} ${student.apellido}`; 
+                select.appendChild(option);
+            });
+            if (students.find(s => s.id === currentValue)) {
+                 select.value = currentValue;
+            }
+        });
+    }
+
+    // --- Memberships Section Logic ---
+    const membershipsCollectionRef = collection(db, `artifacts/${appId}/public/data/memberships`);
+    
+    document.getElementById('add-membership-form-toggle-btn').addEventListener('click', () => {
+        document.getElementById('add-membership-form-container').style.display = 'block';
+        document.getElementById('add-membership-form').reset();
+        document.getElementById('edit-membership-id').value = '';
+        document.getElementById('membership-end-date').readOnly = false; 
+    });
+    document.getElementById('cancel-membership-btn').addEventListener('click', () => {
+        document.getElementById('add-membership-form-container').style.display = 'none';
+        document.getElementById('add-membership-form').reset();
+    });
+
+    document.getElementById('membership-type').addEventListener('change', calculateEndDate);
+    document.getElementById('membership-start-date').addEventListener('change', calculateEndDate);
+
+    function calculateEndDate() {
+        const startDateInput = document.getElementById('membership-start-date');
+        const type = document.getElementById('membership-type').value;
+        const endDateInput = document.getElementById('membership-end-date');
+
+        if (startDateInput.value && type) {
+            const startDate = new Date(startDateInput.value + "T00:00:00"); 
+            let endDate = new Date(startDate);
+            endDateInput.readOnly = true;
+
+            switch (type) {
+                case 'mensual':
+                    endDate.setMonth(startDate.getMonth() + 1);
+                    break;
+                case 'trimestral':
+                    endDate.setMonth(startDate.getMonth() + 3);
+                    break;
+                case 'semestral':
+                    endDate.setMonth(startDate.getMonth() + 6);
+                    break;
+                case 'anual':
+                    endDate.setFullYear(startDate.getFullYear() + 1);
+                    break;
+                case 'clase_unica':
+                    endDate = new Date(startDate); 
+                    break;
+                default:
+                    endDateInput.readOnly = false;
+                    return; 
+            }
+            endDateInput.value = endDate.toISOString().split('T')[0];
+        } else {
+            endDateInput.readOnly = false;
+        }
+    }
+
+
+    document.getElementById('add-membership-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        showLoading(true);
+        const studentSelect = document.getElementById('membership-student-select');
+        const studentId = studentSelect.value;
+        const studentName = studentSelect.options[studentSelect.selectedIndex].dataset.studentName;
+
+        const membershipData = {
+            studentId: studentId,
+            studentName: studentName, 
+            type: document.getElementById('membership-type').value,
+            startDate: Timestamp.fromDate(new Date(document.getElementById('membership-start-date').value + "T00:00:00")),
+            endDate: Timestamp.fromDate(new Date(document.getElementById('membership-end-date').value + "T00:00:00")),
+            amount: parseFloat(document.getElementById('membership-amount').value),
+            paymentStatus: document.getElementById('membership-payment-status').value,
+            qrCodeData: `studentId:${studentId}` 
+        };
+
+        const editMembershipId = document.getElementById('edit-membership-id').value;
+
+        try {
+            if (editMembershipId) {
+                membershipData.updatedAt = serverTimestamp();
+                const membershipRef = doc(db, `artifacts/${appId}/public/data/memberships`, editMembershipId);
+                await updateDoc(membershipRef, membershipData);
+                showAppModal('Membresía Actualizada', 'La membresía ha sido guardada.', 'success');
+            } else {
+                membershipData.createdAt = serverTimestamp();
+                membershipData.adminUserId = currentUserId;
+                await addDoc(membershipsCollectionRef, membershipData);
+                showAppModal('Membresía Registrada', 'Nueva membresía guardada.', 'success');
+            }
+            document.getElementById('add-membership-form').reset();
+            document.getElementById('add-membership-form-container').style.display = 'none';
+        } catch (error) {
+            console.error("Error saving membership:", error);
+            showAppModal('Error', `No se pudo guardar la membresía: ${error.message}`, 'error');
+        }
+        showLoading(false);
+    });
+
+    function renderMembershipsTable(memberships) {
+        currentMemberships = memberships; 
+        const tableBody = document.getElementById('memberships-table-body');
+        const searchInput = document.getElementById('search-membership').value.toLowerCase();
+        tableBody.innerHTML = '';
+
+        const filteredMemberships = memberships.filter(mem => 
+            (mem.studentName && mem.studentName.toLowerCase().includes(searchInput)) ||
+            (mem.type && mem.type.toLowerCase().includes(searchInput))
+        );
+        
+        if (filteredMemberships.length === 0) {
+            tableBody.innerHTML = `<tr><td colspan="8" class="text-center">No se encontraron membresías ${searchInput ? 'con ese criterio.' : '.'}</td></tr>`;
+            return;
+        }
+
+        filteredMemberships.forEach(mem => {
+            const row = tableBody.insertRow();
+            row.innerHTML = `
+                <td>${mem.studentName || 'N/A'}</td>
+                <td>${mem.type}</td>
+                <td>${formatDate(mem.startDate)}</td>
+                <td>${formatDate(mem.endDate)}</td>
+                <td>$${mem.amount.toFixed(2)}</td>
+                <td><span class="badge bg-${mem.paymentStatus === 'pagado' ? 'success' : 'warning text-dark'}">${mem.paymentStatus}</span></td>
+                <td>${getMembershipStatus(mem)}</td>
+                <td>
+                    <button class="btn btn-sm btn-outline-primary edit-membership-btn" data-id="${mem.id}"><i class="fas fa-edit"></i></button>
+                    <button class="btn btn-sm btn-outline-danger delete-membership-btn" data-id="${mem.id}"><i class="fas fa-trash"></i></button>
+                </td>
+            `;
+        });
+        addMembershipEventListeners();
+        populateQrStudentSelect(memberships); 
+        renderUpcomingPayments(memberships); 
+        renderPaymentHistory(memberships); 
+    }
+
+    document.getElementById('search-membership').addEventListener('input', () => renderMembershipsTable(currentMemberships));
+
+    function addMembershipEventListeners() {
+        document.querySelectorAll('.edit-membership-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const memId = e.currentTarget.dataset.id;
+                const mem = currentMemberships.find(m => m.id === memId);
+                if (mem) {
+                    document.getElementById('edit-membership-id').value = mem.id;
+                    document.getElementById('membership-student-select').value = mem.studentId;
+                    document.getElementById('membership-type').value = mem.type;
+                    document.getElementById('membership-start-date').value = mem.startDate.toDate().toISOString().split('T')[0];
+                    document.getElementById('membership-end-date').value = mem.endDate.toDate().toISOString().split('T')[0];
+                    document.getElementById('membership-amount').value = mem.amount;
+                    document.getElementById('membership-payment-status').value = mem.paymentStatus;
+                    
+                    document.getElementById('membership-end-date').readOnly = false; 
+                    if (['mensual', 'trimestral', 'semestral', 'anual', 'clase_unica'].includes(mem.type)) {
+                         // Standard type, keep editable on edit.
+                    }
+
+                    document.getElementById('add-membership-form-container').style.display = 'block';
+                     window.scrollTo(0, document.getElementById('add-membership-form-container').offsetTop);
+                }
+            });
+        });
+        document.querySelectorAll('.delete-membership-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const memId = e.currentTarget.dataset.id;
+                const mem = currentMemberships.find(m => m.id === memId);
+                showAppModal('Confirmar Eliminación', `¿Seguro que deseas eliminar la membresía de ${mem.studentName || 'este alumno'}?`, 'warning', async () => {
+                    showLoading(true);
+                    try {
+                        await deleteDoc(doc(db, `artifacts/${appId}/public/data/memberships`, memId));
+                        showAppModal('Membresía Eliminada', 'La membresía ha sido eliminada.', 'success');
+                    } catch (error) {
+                        console.error("Error deleting membership:", error);
+                        showAppModal('Error', `No se pudo eliminar la membresía: ${error.message}`, 'error');
+                    }
+                    showLoading(false);
+                });
+            });
+        });
+    }
+
+    // --- QR Generation Section Logic ---
+    let qrCodeInstance = null; 
+
+    function populateQrStudentSelect(allMemberships) {
+        const select = document.getElementById('qr-student-select');
+        select.innerHTML = '<option selected disabled value="">Seleccionar alumno...</option>';
+        
+        const today = new Date();
+        today.setHours(0,0,0,0);
+
+        const activePaidMemberships = allMemberships.filter(mem => {
+            const endDate = mem.endDate.toDate();
+            endDate.setHours(0,0,0,0);
+            return mem.paymentStatus === 'pagado' && endDate >= today;
+        });
+
+        const uniqueStudents = {};
+        activePaidMemberships.forEach(mem => {
+            if (!uniqueStudents[mem.studentId]) {
+                uniqueStudents[mem.studentId] = { id: mem.studentId, name: mem.studentName, qrData: mem.qrCodeData };
+            }
+        });
+        
+        const studentArray = Object.values(uniqueStudents);
+        studentArray.sort((a,b) => a.name.localeCompare(b.name));
+
+        studentArray.forEach(student => {
+            const option = document.createElement('option');
+            option.value = student.id;
+            option.textContent = student.name;
+            option.dataset.qrData = student.qrData; 
+            select.appendChild(option);
+        });
+    }
+
+    document.getElementById('generate-qr-btn').addEventListener('click', () => {
+        const studentSelect = document.getElementById('qr-student-select');
+        const selectedOption = studentSelect.options[studentSelect.selectedIndex];
+        const qrData = selectedOption.dataset.qrData; 
+
+        if (!qrData) {
+            showAppModal('Seleccionar Alumno', 'Por favor, selecciona un alumno con membresía activa y pagada.', 'warning');
+            return;
+        }
+
+        const qrContainer = document.getElementById('generated-qr-image-container');
+        qrContainer.innerHTML = ''; 
+        
+        if (typeof QRCode !== 'undefined') {
+             qrCodeInstance = new QRCode(qrContainer, {
+                text: qrData, 
+                width: 200,
+                height: 200,
+                colorDark : "#000000",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
+            });
+        } else {
+            qrContainer.innerHTML = `<p class="text-danger">Error: Librería QRCode no cargada. QR Data: ${qrData}</p>`;
+            console.error("QRCode library is not loaded.");
+        }
+
+        document.getElementById('qr-result-container').style.display = 'block';
+        document.getElementById('download-qr-btn').style.display = 'inline-block';
+    });
+    
+    document.getElementById('download-qr-btn').addEventListener('click', () => {
+        const qrImage = document.querySelector('#generated-qr-image-container img');
+        const qrCanvas = document.querySelector('#generated-qr-image-container canvas');
+
+        if (qrImage) {
+            const link = document.createElement('a');
+            link.href = qrImage.src;
+            link.download = `qr_acceso_${document.getElementById('qr-student-select').options[document.getElementById('qr-student-select').selectedIndex].text.replace(/\s+/g, '_')}.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } else if (qrCanvas) { 
+             const link = document.createElement('a');
+            link.href = qrCanvas.toDataURL("image/png");
+            link.download = `qr_acceso_${document.getElementById('qr-student-select').options[document.getElementById('qr-student-select').selectedIndex].text.replace(/\s+/g, '_')}.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } else {
+            showAppModal('Error de Descarga', 'No se encontró imagen de QR para descargar.', 'error');
+        }
+    });
+
+
+    // --- Attendance Section Logic ---
+    const attendanceCollectionRef = collection(db, `artifacts/${appId}/public/data/attendance`);
+    let dailyAttendanceListener = null; 
+
+    document.querySelectorAll('input[name="scan-type"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            if (this.value === 'camera') {
+                document.getElementById('camera-scanner-container').style.display = 'block';
+                document.getElementById('manual-input-container').style.display = 'none';
+                stopQrScanner(); 
+            } else {
+                document.getElementById('camera-scanner-container').style.display = 'none';
+                document.getElementById('manual-input-container').style.display = 'block';
+                stopQrScanner();
+            }
+        });
+    });
+
+    document.getElementById('start-scanner-btn').addEventListener('click', () => {
+        startQrScanner();
+        document.getElementById('start-scanner-btn').style.display = 'none';
+        document.getElementById('stop-scanner-btn').style.display = 'inline-block';
+    });
+    document.getElementById('stop-scanner-btn').addEventListener('click', () => {
+        stopQrScanner();
+        document.getElementById('start-scanner-btn').style.display = 'inline-block';
+        document.getElementById('stop-scanner-btn').style.display = 'none';
+        document.getElementById('qr-reader-results').textContent = 'Escáner detenido.';
+    });
+
+
+    function startQrScanner() {
+        if (typeof Html5Qrcode === 'undefined') {
+            showAppModal('Error de Escáner', 'Librería Html5Qrcode no cargada.', 'error');
+            console.error("Html5Qrcode library not loaded.");
+            return;
+        }
+        if (!html5QrCode) {
+            html5QrCode = new Html5Qrcode("qr-reader");
+        }
+
+        const qrCodeSuccessCallback = async (decodedText, decodedResult) => {
+            console.log(`Scan result: ${decodedText}`, decodedResult);
+            document.getElementById('qr-reader-results').textContent = `Código detectado: ${decodedText}`;
+            stopQrScanner(); 
+            document.getElementById('start-scanner-btn').style.display = 'inline-block';
+            document.getElementById('stop-scanner-btn').style.display = 'none';
+            
+            if (decodedText.startsWith("studentId:")) {
+                const studentId = decodedText.split(":")[1];
+                await processAttendance(studentId);
+            } else {
+                showAppModal('Código QR Inválido', 'El formato del código QR no es reconocido.', 'error');
+                 updateLastAttendanceInfo({status: 'error', message: 'QR no reconocido.'});
+            }
+        };
+
+        const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+        
+        Html5Qrcode.getCameras().then(devices => {
+            if (devices && devices.length) {
+                const cameraId = devices[0].id; 
+                 html5QrCode.start(
+                    cameraId,
+                    config,
+                    qrCodeSuccessCallback,
+                    (errorMessage) => { /* console.warn(`QR error: ${errorMessage}`); */ }) 
+                .catch(err => {
+                    console.error("Error starting QR scanner:", err);
+                    showAppModal('Error de Cámara', `No se pudo iniciar el escáner: ${err}`, 'error');
+                    document.getElementById('qr-reader-results').textContent = `Error: ${err}`;
+                });
+                document.getElementById('qr-reader-results').textContent = 'Escáner iniciado. Buscando QR...';
+            } else {
+                 showAppModal('Error de Cámara', 'No se encontraron cámaras.', 'error');
+                 document.getElementById('qr-reader-results').textContent = 'No se encontraron cámaras.';
+            }
+        }).catch(err => {
+            console.error("Error getting cameras:", err);
+            showAppModal('Error de Cámara', `Error al acceder a las cámaras: ${err}`, 'error');
+            document.getElementById('qr-reader-results').textContent = `Error cámaras: ${err}`;
+        });
+    }
+
+    function stopQrScanner() {
+        if (html5QrCode && html5QrCode.isScanning) {
+            html5QrCode.stop().then(() => {
+                console.log("QR Scanner stopped.");
+            }).catch(err => {
+                console.error("Error stopping QR scanner:", err);
+            });
+        }
+    }
+    
+    document.getElementById('submit-manual-code-btn').addEventListener('click', async () => {
+        const studentId = document.getElementById('qr-code-manual').value.trim();
+        if (!studentId) {
+            showAppModal('Entrada Manual', 'Por favor, ingresa el ID del alumno.', 'warning');
+            return;
+        }
+        await processAttendance(studentId);
+        document.getElementById('qr-code-manual').value = '';
+    });
+
+    async function processAttendance(studentId) {
+        showLoading(true);
+        try {
+            const studentRef = doc(db, `artifacts/${appId}/public/data/students`, studentId);
+            const studentSnap = await getDoc(studentRef);
+
+            if (!studentSnap.exists()) {
+                showAppModal('Asistencia Fallida', 'Alumno no encontrado.', 'error');
+                updateLastAttendanceInfo({status: 'error', studentName: `ID ${studentId}`, message: 'Alumno no encontrado.'});
+                showLoading(false);
+                return;
+            }
+            const studentData = { id: studentSnap.id, ...studentSnap.data() };
+
+            const today = new Date();
+            today.setHours(0,0,0,0); 
+            const q = query(membershipsCollectionRef, 
+                            where("studentId", "==", studentId),
+                            where("paymentStatus", "==", "pagado"),
+                            where("endDate", ">=", Timestamp.fromDate(today))
+                           );
+            const membershipSnap = await getDocs(q);
+            
+            let validMembership = null;
+            if (!membershipSnap.empty) {
+                membershipSnap.forEach(doc => {
+                    const mem = {id: doc.id, ...doc.data()};
+                    const startDate = mem.startDate.toDate();
+                    startDate.setHours(0,0,0,0);
+                    const endDate = mem.endDate.toDate();
+                    endDate.setHours(23,59,59,999); 
+
+                    if (startDate <= new Date() && endDate >= new Date()) {
+                         if (!validMembership || mem.endDate.toDate() > validMembership.endDate.toDate()) {
+                            validMembership = mem;
+                        }
+                    }
+                });
+            }
+
+            if (!validMembership) {
+                showAppModal('Asistencia Denegada', `${studentData.nombre} ${studentData.apellido} no tiene una membresía activa y pagada.`, 'warning');
+                updateLastAttendanceInfo({status: 'warning', studentName: `${studentData.nombre} ${studentData.apellido}`, message: 'Membresía no válida o expirada.'});
+                showLoading(false);
+                return;
+            }
+
+            const startOfToday = new Date();
+            startOfToday.setHours(0, 0, 0, 0);
+            const endOfToday = new Date();
+            endOfToday.setHours(23, 59, 59, 999);
+
+            const attendanceQuery = query(attendanceCollectionRef,
+                where("studentId", "==", studentId),
+                where("timestamp", ">=", Timestamp.fromDate(startOfToday)),
+                where("timestamp", "<=", Timestamp.fromDate(endOfToday))
+            );
+            const existingAttendanceSnap = await getDocs(attendanceQuery);
+
+            if (!existingAttendanceSnap.empty) {
+                showAppModal('Asistencia Registrada', `${studentData.nombre} ${studentData.apellido} ya registró su asistencia hoy.`, 'info');
+                const existingRecord = existingAttendanceSnap.docs[0].data();
+                 updateLastAttendanceInfo({
+                    status: 'info',
+                    studentName: `${studentData.nombre} ${studentData.apellido}`,
+                    message: `Ya registró ingreso a las ${formatTime(existingRecord.timestamp)}.`,
+                    membershipInfo: `Membresía válida hasta: ${formatDate(validMembership.endDate)}`
+                });
+                showLoading(false);
+                return;
+            }
+
+            const attendanceRecord = {
+                studentId: studentId,
+                studentName: `${studentData.nombre} ${studentData.apellido}`,
+                timestamp: serverTimestamp(),
+                membershipId: validMembership.id,
+                membershipType: validMembership.type,
+                adminUserId: currentUserId, 
+                status: 'registrado'
+            };
+            await addDoc(attendanceCollectionRef, attendanceRecord);
+            
+            showAppModal('Asistencia Exitosa', `Ingreso de ${studentData.nombre} ${studentData.apellido} registrado.`, 'success');
+            updateLastAttendanceInfo({
+                status: 'success',
+                studentName: `${studentData.nombre} ${studentData.apellido}`,
+                message: `Ingreso registrado: ${formatTime(Timestamp.now())}`, 
+                membershipInfo: `Membresía (${validMembership.type}) válida hasta: ${formatDate(validMembership.endDate)}`
+            });
+
+        } catch (error) {
+            console.error("Error processing attendance:", error);
+            showAppModal('Error de Asistencia', `No se pudo procesar la asistencia: ${error.message}`, 'error');
+            updateLastAttendanceInfo({status: 'error', message: `Error: ${error.message}`});
+        }
+        showLoading(false);
+    }
+    
+    function updateLastAttendanceInfo({status, studentName = '', message = '', membershipInfo = ''}) {
+        const container = document.getElementById('last-attendance-info-container');
+        let iconClass = 'fa-user-clock';
+        let textColor = 'text-muted';
+
+        if (status === 'success') { iconClass = 'fa-check-circle'; textColor = 'text-success'; }
+        else if (status === 'warning') { iconClass = 'fa-exclamation-triangle'; textColor = 'text-warning'; }
+        else if (status === 'error') { iconClass = 'fa-times-circle'; textColor = 'text-danger'; }
+        else if (status === 'info') { iconClass = 'fa-info-circle'; textColor = 'text-info'; }
+
+        container.innerHTML = `
+            <div class="text-center p-3 ${textColor}">
+                <i class="fas ${iconClass} fa-2x mb-2"></i>
+                ${studentName ? `<h5 class="mb-1">${studentName}</h5>` : ''}
+                <p class="mb-1">${message}</p>
+                ${membershipInfo ? `<p class="small text-muted">${membershipInfo}</p>` : ''}
+            </div>
+        `;
+    }
+
+    function renderDailyAttendanceLog(logEntries) {
+        const tableBody = document.getElementById('attendance-log-table-body');
+        tableBody.innerHTML = '';
+        document.getElementById('current-date-attendance').textContent = new Date().toLocaleDateString('es-ES');
+
+        if (logEntries.length === 0) {
+            tableBody.innerHTML = `<tr><td colspan="3" class="text-center">No hay registros de asistencia hoy.</td></tr>`;
+            return;
+        }
+        
+        logEntries.sort((a, b) => b.timestamp.toDate() - a.timestamp.toDate());
+
+        logEntries.forEach(entry => {
+            const row = tableBody.insertRow();
+            row.innerHTML = `
+                <td>${entry.studentName}</td>
+                <td>${formatTime(entry.timestamp)}</td>
+                <td><span class="badge bg-success">${entry.status}</span></td> 
+            `;
+        });
+    }
+
+    function listenForDailyAttendance() {
+        if (dailyAttendanceListener) dailyAttendanceListener(); 
+
+        const startOfToday = new Date();
+        startOfToday.setHours(0, 0, 0, 0);
+        const endOfToday = new Date();
+        endOfToday.setHours(23, 59, 59, 999);
+
+        const q = query(attendanceCollectionRef, 
+            where("timestamp", ">=", Timestamp.fromDate(startOfToday)),
+            where("timestamp", "<=", Timestamp.fromDate(endOfToday))
+        );
+
+        dailyAttendanceListener = onSnapshot(q, (snapshot) => {
+            const entries = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            renderDailyAttendanceLog(entries);
+        }, (error) => {
+            console.error("Error fetching daily attendance:", error);
+            showAppModal("Error de Asistencia", `No se pudo cargar el registro diario: ${error.message}`, 'error');
+        });
+    }
+
+
+    // --- Routines Section Logic ---
+    const routinesCollectionRef = collection(db, `artifacts/${appId}/public/data/routines`);
+    
+    document.getElementById('routine-form-toggle-btn').addEventListener('click', () => {
+        const formContainer = document.getElementById('routine-form-container');
+        const isVisible = formContainer.style.display === 'block';
+        formContainer.style.display = isVisible ? 'none' : 'block';
+        if (!isVisible) { 
+            document.getElementById('routine-form').reset();
+            if (quill) quill.setText('');
+            document.getElementById('edit-routine-id').value = '';
+            document.getElementById('routine-form-title').textContent = 'Asignar/Crear Rutina';
+            document.getElementById('cancel-routine-edit-btn').style.display = 'none';
+        }
+    });
+
+    document.getElementById('cancel-routine-edit-btn').addEventListener('click', () => {
+        document.getElementById('routine-form-container').style.display = 'none';
+        document.getElementById('routine-form').reset();
+        if (quill) quill.setText('');
+        document.getElementById('edit-routine-id').value = '';
+        document.getElementById('routine-form-title').textContent = 'Asignar/Crear Rutina';
+    });
+    
+    document.getElementById('clear-routine-btn').addEventListener('click', () => {
+        if (quill) quill.setText('');
+    });
+
+    document.getElementById('routine-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        showLoading(true);
+
+        const studentSelect = document.getElementById('routine-student-select');
+        const studentId = studentSelect.value;
+        const studentName = studentSelect.options[studentSelect.selectedIndex].dataset.studentName;
+        const routineName = document.getElementById('routine-name').value.trim();
+        const routineContentHTML = quill ? quill.root.innerHTML : '<p>Error: Editor no inicializado.</p>';
+
+        if (!studentId) {
+            showAppModal('Error de Rutina', 'Por favor, selecciona un alumno.', 'warning');
+            showLoading(false); return;
+        }
+        if (!routineName) {
+            showAppModal('Error de Rutina', 'Por favor, ingresa un nombre para la rutina.', 'warning');
+            showLoading(false); return;
+        }
+        if (!quill || !routineContentHTML || routineContentHTML === '<p><br></p>') {
+            showAppModal('Error de Rutina', 'Por favor, escribe el contenido de la rutina.', 'warning');
+            showLoading(false); return;
+        }
+
+        const routineData = {
+            studentId: studentId,
+            studentName: studentName,
+            routineName: routineName,
+            contentHTML: routineContentHTML,
+        };
+
+        const editRoutineId = document.getElementById('edit-routine-id').value;
+        try {
+            if (editRoutineId) {
+                routineData.lastUpdateDate = serverTimestamp();
+                const routineRef = doc(db, `artifacts/${appId}/public/data/routines`, editRoutineId);
+                await updateDoc(routineRef, routineData);
+                showAppModal('Rutina Actualizada', 'La rutina ha sido guardada.', 'success');
+            } else {
+                routineData.assignmentDate = serverTimestamp();
+                routineData.lastUpdateDate = serverTimestamp();
+                routineData.adminUserId = currentUserId;
+                await addDoc(routinesCollectionRef, routineData);
+                showAppModal('Rutina Guardada', 'La rutina ha sido asignada y guardada.', 'success');
+            }
+            document.getElementById('routine-form').reset();
+            if (quill) quill.setText('');
+            document.getElementById('routine-form-container').style.display = 'none';
+        } catch (error) {
+            console.error("Error saving routine:", error);
+            showAppModal('Error', `No se pudo guardar la rutina: ${error.message}`, 'error');
+        }
+        showLoading(false);
+    });
+    
+    document.getElementById('routine-template-select').addEventListener('change', function() {
+        const template = this.value;
+        let templateContent = '';
+        const routineNameInput = document.getElementById('routine-name');
+        if (template === 'principiante') {
+            routineNameInput.value = 'Rutina Principiante General';
+            templateContent = `<h3>Rutina para Principiantes</h3><p>Esta rutina está diseñada para personas que comienzan.</p><h4>Lunes: Cuerpo Completo</h4><ul><li>Sentadillas: 3x10</li><li>Press de banca: 3x10</li><li>Remo: 3x10</li></ul><h4>Miércoles: Cardio</h4><ul><li>Caminadora: 30 min</li></ul><h4>Viernes: Cuerpo Completo</h4><ul><li>Peso muerto (ligero): 3x10</li><li>Press militar: 3x10</li><li>Dominadas asistidas: 3x8</li></ul>`;
+        } else if (template === 'intermedio') {
+            routineNameInput.value = 'Rutina Intermedia General';
+            templateContent = `<h3>Rutina Intermedia</h3><p>Para personas con experiencia previa.</p><h4>Lunes: Pecho y Tríceps</h4><ul><li>Press de banca: 4x10</li><li>Fondos: 3x12</li></ul><h4>Martes: Espalda y Bíceps</h4><ul><li>Dominadas: 4x8</li><li>Curl con barra: 3x10</li></ul><h4>Jueves: Piernas</h4><ul><li>Sentadillas: 4x10</li><li>Prensa: 3x12</li></ul><h4>Viernes: Hombros</h4><ul><li>Press militar: 4x10</li><li>Elevaciones laterales: 3x15</li></ul>`;
+        } else if (template === 'avanzado') {
+            routineNameInput.value = 'Rutina Avanzada General';
+            templateContent = `<h3>Rutina Avanzada</h3><p>Para personas con amplia experiencia.</p><h4>Día 1: Empuje</h4><ul><li>Press Banca: 5x5</li><li>Press Militar: 5x5</li></ul><h4>Día 2: Tirón</h4><ul><li>Peso Muerto: 1x5</li><li>Dominadas lastradas: 5x5</li></ul><h4>Día 3: Pierna</h4><ul><li>Sentadilla Trasera: 5x5</li><li>Prensa: 4x8</li></ul>`;
+        }
+        if (quill && templateContent) {
+             quill.clipboard.dangerouslyPasteHTML(0, templateContent);
+        }
+    });
+
+    function renderAssignedRoutinesTable(routines) {
+        const tableBody = document.getElementById('assigned-routines-table-body');
+        const searchInput = document.getElementById('search-assigned-routine').value.toLowerCase();
+        tableBody.innerHTML = '';
+
+        const filteredRoutines = routines.filter(r => 
+            (r.studentName && r.studentName.toLowerCase().includes(searchInput)) ||
+            (r.routineName && r.routineName.toLowerCase().includes(searchInput))
+        );
+
+        if (filteredRoutines.length === 0) {
+            tableBody.innerHTML = `<tr><td colspan="5" class="text-center">No se encontraron rutinas ${searchInput ? 'con ese criterio.' : '.'}</td></tr>`;
+            return;
+        }
+
+        filteredRoutines.forEach(r => {
+            const row = tableBody.insertRow();
+            row.innerHTML = `
+                <td>${r.studentName}</td>
+                <td>${r.routineName}</td>
+                <td>${formatDate(r.assignmentDate)}</td>
+                <td>${formatDate(r.lastUpdateDate, true)}</td>
+                <td>
+                    <button class="btn btn-sm btn-outline-info view-routine-btn" data-id="${r.id}"><i class="fas fa-eye"></i></button>
+                    <button class="btn btn-sm btn-outline-primary edit-routine-btn" data-id="${r.id}"><i class="fas fa-edit"></i></button>
+                    <button class="btn btn-sm btn-outline-danger delete-routine-btn" data-id="${r.id}"><i class="fas fa-trash"></i></button>
+                </td>
+            `;
+        });
+        addRoutineEventListeners(routines);
+    }
+    
+    document.getElementById('search-assigned-routine').addEventListener('input', () => {
+        if (typeof allFetchedRoutines !== 'undefined') {
+            renderAssignedRoutinesTable(allFetchedRoutines);
+        }
+    });
+
+
+    let allFetchedRoutines = []; 
+    function listenForRoutines() {
+        const q = query(routinesCollectionRef); 
+        onSnapshot(q, (snapshot) => {
+            allFetchedRoutines = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            allFetchedRoutines.sort((a,b) => (b.lastUpdateDate?.toDate() || 0) - (a.lastUpdateDate?.toDate() || 0)); 
+            renderAssignedRoutinesTable(allFetchedRoutines);
+        }, (error) => {
+            console.error("Error fetching routines:", error);
+            showAppModal("Error de Rutinas", `No se pudo cargar la lista de rutinas: ${error.message}`, 'error');
+        });
+    }
+
+
+    function addRoutineEventListeners(routines) {
+        document.querySelectorAll('.view-routine-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const routineId = e.currentTarget.dataset.id;
+                const routine = routines.find(r => r.id === routineId);
+                if (routine) {
+                    showAppModal(
+                        `Rutina: ${routine.routineName} (Alumno: ${routine.studentName})`,
+                        `<div style="max-height: 400px; overflow-y: auto;">${routine.contentHTML}</div>`,
+                        'info'
+                    );
+                }
+            });
+        });
+        document.querySelectorAll('.edit-routine-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const routineId = e.currentTarget.dataset.id;
+                const routine = routines.find(r => r.id === routineId);
+                if (routine && quill) {
+                    document.getElementById('edit-routine-id').value = routine.id;
+                    document.getElementById('routine-student-select').value = routine.studentId;
+                    document.getElementById('routine-name').value = routine.routineName;
+                    quill.root.innerHTML = routine.contentHTML;
+                    document.getElementById('routine-form-title').textContent = 'Editar Rutina';
+                    document.getElementById('routine-form-container').style.display = 'block';
+                    document.getElementById('cancel-routine-edit-btn').style.display = 'inline-block';
+                    window.scrollTo(0, document.getElementById('routine-form-container').offsetTop);
+                } else if (!quill) {
+                    showAppModal("Error", "El editor de texto no está listo.", "error");
+                }
+            });
+        });
+        document.querySelectorAll('.delete-routine-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const routineId = e.currentTarget.dataset.id;
+                const routine = routines.find(r => r.id === routineId);
+                showAppModal('Confirmar Eliminación', `¿Seguro que deseas eliminar la rutina "${routine.routineName}" de ${routine.studentName}?`, 'warning', async () => {
+                    showLoading(true);
+                    try {
+                        await deleteDoc(doc(db, `artifacts/${appId}/public/data/routines`, routineId));
+                        showAppModal('Rutina Eliminada', 'La rutina ha sido eliminada.', 'success');
+                    } catch (error) {
+                        console.error("Error deleting routine:", error);
+                        showAppModal('Error', `No se pudo eliminar la rutina: ${error.message}`, 'error');
+                    }
+                    showLoading(false);
+                });
+            });
+        });
+    }
+    
+    // --- Payments and Reminders Section Logic ---
+    function renderUpcomingPayments(allMemberships) {
+        const tableBody = document.getElementById('upcoming-payments-table-body');
+        tableBody.innerHTML = '';
+        const today = new Date();
+        const thirtyDaysFromNow = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000); 
+
+        const upcoming = allMemberships.filter(mem => {
+            const endDate = mem.endDate.toDate();
+            return (mem.paymentStatus === 'pendiente' || endDate <= thirtyDaysFromNow) && endDate >= today;
+        });
+        
+        upcoming.sort((a,b) => a.endDate.toDate() - b.endDate.toDate()); 
+
+        if (upcoming.length === 0) {
+            tableBody.innerHTML = `<tr><td colspan="6" class="text-center">No hay pagos pendientes o próximos a vencer.</td></tr>`;
+            return;
+        }
+
+        upcoming.forEach(mem => {
+            const row = tableBody.insertRow();
+            let statusBadge;
+            if (mem.paymentStatus === 'pendiente') {
+                statusBadge = '<span class="badge bg-danger">Pendiente</span>';
+            } else if (mem.endDate.toDate() < today) { 
+                statusBadge = '<span class="badge bg-danger">Vencido (Pago Realizado)</span>';
+            } else if (mem.endDate.toDate() <= new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000)) { 
+                statusBadge = '<span class="badge bg-warning text-dark">Próximo a Vencer</span>';
+            } else {
+                 statusBadge = '<span class="badge bg-info">Vence Pronto</span>';
+            }
+
+            row.innerHTML = `
+                <td>${mem.studentName}</td>
+                <td>${mem.type}</td>
+                <td>${formatDate(mem.endDate)}</td>
+                <td>$${mem.amount.toFixed(2)}</td>
+                <td>${statusBadge}</td>
+                <td>
+                    ${mem.paymentStatus === 'pendiente' ? `<button class="btn btn-sm btn-success mark-paid-btn" data-id="${mem.id}" data-student-id="${mem.studentId}" data-student-name="${mem.studentName}" data-amount="${mem.amount}" data-type="${mem.type}">Marcar Pagado</button>` : ''}
+                </td>
+            `;
+        });
+        addPaymentEventListeners();
+    }
+
+    function addPaymentEventListeners() {
+        document.querySelectorAll('.mark-paid-btn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const membershipId = e.currentTarget.dataset.id;
+                const studentId = e.currentTarget.dataset.studentId;
+                const studentName = e.currentTarget.dataset.studentName;
+                const amount = parseFloat(e.currentTarget.dataset.amount);
+                const type = e.currentTarget.dataset.type;
+
+                showAppModal('Confirmar Pago', `¿Confirmar que la membresía (${type}) de ${studentName} por $${amount.toFixed(2)} ha sido pagada?`, 'info', async () => {
+                    showLoading(true);
+                    try {
+                        const membershipRef = doc(db, `artifacts/${appId}/public/data/memberships`, membershipId);
+                        await updateDoc(membershipRef, { 
+                            paymentStatus: 'pagado',
+                            lastPaymentDate: serverTimestamp(), 
+                            updatedAt: serverTimestamp()
+                        });
+                        showAppModal('Pago Registrado', 'El estado de la membresía ha sido actualizado a "pagado".', 'success');
+                    } catch (error) {
+                        console.error("Error marking as paid:", error);
+                        showAppModal('Error', `No se pudo actualizar el estado de pago: ${error.message}`, 'error');
+                    }
+                    showLoading(false);
+                });
+            });
+        });
+    }
+
+    function renderPaymentHistory(allMemberships) {
+        const tableBody = document.getElementById('payment-history-table-body');
+        tableBody.innerHTML = '';
+
+        const paidMemberships = allMemberships.filter(mem => mem.paymentStatus === 'pagado' && mem.lastPaymentDate);
+        paidMemberships.sort((a,b) => b.lastPaymentDate.toDate() - a.lastPaymentDate.toDate()); 
+
+        if (paidMemberships.length === 0) {
+            tableBody.innerHTML = `<tr><td colspan="5" class="text-center">No hay historial de pagos registrados.</td></tr>`;
+            return;
+        }
+
+        paidMemberships.forEach(mem => {
+            const row = tableBody.insertRow();
+            row.innerHTML = `
+                <td>${mem.studentName}</td>
+                <td>Membresía ${mem.type}</td>
+                <td>${formatDate(mem.lastPaymentDate, true)}</td>
+                <td>$${mem.amount.toFixed(2)}</td>
+                <td>Admin (ID: ${mem.adminUserId ? mem.adminUserId.substring(0,8)+'...' : 'N/A'})</td>
+            `;
+        });
+    }
+    
+    document.getElementById('reminder-settings-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const settings = {
+            enableReminders: document.getElementById('enable-reminders').checked,
+            reminderDays: document.getElementById('reminder-days').value,
+            notifyEmail: document.getElementById('notify-email').checked,
+            notifySMS: document.getElementById('notify-sms').checked,
+        };
+        console.log("Reminder settings (simulated save):", settings);
+        showAppModal('Configuración Guardada', 'La configuración de recordatorios (simulada) ha sido guardada.', 'success');
+    });
+
+
+    // --- Initialization Logic ---
+    function initializeQuillEditor() {
+        if (typeof Quill !== 'undefined' && !quillInitialized && document.getElementById('editor-container')) {
+            try {
+                quill = new Quill('#editor-container', {
+                    modules: {
+                        toolbar: [
+                            [{ 'header': [1, 2, 3, false] }],
+                            ['bold', 'italic', 'underline'],
+                            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                            [{ 'color': [] }, { 'background': [] }],
+                            [{ 'align': [] }],
+                            ['clean']
+                        ]
+                    },
+                    placeholder: 'Describe la rutina aquí...',
+                    theme: 'snow'
+                });
+                quillInitialized = true;
+                console.log("Quill editor initialized successfully.");
+            } catch (e) {
+                console.error("Error initializing Quill:", e);
+                showAppModal("Error de Editor", "No se pudo inicializar el editor de texto.", "error");
+            }
+        } else if (document.getElementById('editor-container') && !quillInitialized) {
+            console.warn("Quill library not available when initializeQuillEditor was called. Will retry on DOMContentLoaded or auth change.");
+        }
+    }
+
+    function initializeAppUIDataListeners() {
+        if (currentUserId) { 
+            onSnapshot(query(studentsCollectionRef), (snapshot) => {
+                const students = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderStudentsTable(students); 
+                showLoading(false); 
+            }, error => {
+                console.error("Error fetching students:", error);
+                showAppModal('Error de Datos', `No se pudieron cargar los alumnos: ${error.message}`, 'error');
+                showLoading(false);
+            });
+
+            onSnapshot(query(membershipsCollectionRef), (snapshot) => {
+                const memberships = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderMembershipsTable(memberships); 
+            }, error => {
+                console.error("Error fetching memberships:", error);
+                showAppModal('Error de Datos', `No se pudieron cargar las membresías: ${error.message}`, 'error');
+            });
+            
+            listenForRoutines();
+            listenForDailyAttendance(); 
+        } else {
+            console.log("User not authenticated yet, delaying data load.");
+        }
+    }
+
+    // --- Sidebar Navigation & UI ---
+    document.querySelectorAll('.sidebar .nav-link').forEach(link => {
+        link.addEventListener('click', function() {
+            const sectionId = this.dataset.section;
+            
+            document.querySelectorAll('.sidebar .nav-link').forEach(l => l.classList.remove('active'));
+            this.classList.add('active');
+            
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            const targetSection = document.getElementById(`${sectionId}-section`);
+            if (targetSection) {
+                targetSection.classList.add('active');
+                document.getElementById('navbar-title').textContent = this.textContent.trim();
+
+                if (sectionId === 'attendance') {
+                    listenForDailyAttendance(); 
+                } else {
+                    // stopQrScanner(); // Optionally stop scanner
+                }
+            }
+            
+            if (window.innerWidth < 992) {
+                document.querySelector('.sidebar').classList.remove('show');
+                document.querySelector('.toggle-sidebar-btn').classList.remove('is-active'); 
+            }
+        });
+    });
+
+    document.querySelector('.toggle-sidebar-btn').addEventListener('click', function() {
+        document.querySelector('.sidebar').classList.toggle('show');
+        this.classList.toggle('is-active'); 
+        if (document.querySelector('.sidebar').classList.contains('show')) {
+            this.style.color = 'white';
+        } else {
+            this.style.color = 'var(--primary)';
+        }
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+        initializeQuillEditor(); // Primary attempt to initialize Quill
+
+        const activeLink = document.querySelector('.sidebar .nav-link.active');
+        if (activeLink) {
+            document.getElementById('navbar-title').textContent = activeLink.textContent.trim();
+        }
+    });
+
+  </script>
+</body>
+</html>
