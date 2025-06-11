@@ -19,7 +19,7 @@ class MembershipBase(BaseModel):
     StartDate: datetime.datetime
     EndDate: datetime.datetime
     Amount: Decimal
-    PaymentStatus: str = Field(..., pattern=r"^(pagado|pendiente)$") # Valida el status
+    PaymentStatus: str = Field(pattern=r"^(pagado|pendiente)$") # Valida el status
     StudentName: Optional[str] = None
     QrCodeData: Optional[str] = None
     AdminUserID: Optional[str] = None
@@ -49,7 +49,7 @@ class AdminUserBase(BaseModel):
 
 # --- Create Schemas ---
 class StudentCreate(StudentBase):
-    StudentID: Optional[str] = None # Permitir que se genere o se proporcione
+    StudentID: Optional[str] = None
 
 class MembershipCreate(MembershipBase):
     MembershipID: Optional[str] = None
@@ -61,7 +61,7 @@ class RoutineCreate(RoutineBase):
     RoutineID: Optional[str] = None
 
 class AdminUserCreate(AdminUserBase):
-    AdminUserID: str # El ID debe venir de la autenticación (ej. Firebase UID o similar)
+    AdminUserID: str
 
 # --- Update Schemas ---
 class StudentUpdate(StudentBase):
@@ -94,7 +94,7 @@ class Student(StudentBase):
     SearchableName: Optional[str] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True # CORREGIDO
 
 class Membership(MembershipBase):
     MembershipID: str
@@ -102,14 +102,14 @@ class Membership(MembershipBase):
     UpdatedAt: Optional[datetime.datetime] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True # CORREGIDO
 
 class Attendance(AttendanceBase):
     AttendanceID: int
     Timestamp: datetime.datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True # CORREGIDO
 
 class Routine(RoutineBase):
     RoutineID: str
@@ -117,7 +117,7 @@ class Routine(RoutineBase):
     LastUpdateDate: datetime.datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True # CORREGIDO
 
 class AdminUser(AdminUserBase):
     AdminUserID: str
@@ -125,4 +125,4 @@ class AdminUser(AdminUserBase):
     UpdatedAt: Optional[datetime.datetime] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True # CORREGIDO
